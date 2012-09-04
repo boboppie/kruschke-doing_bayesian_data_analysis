@@ -1,0 +1,21 @@
+Bayesian estimation supersedes the t test.
+
+John K. Kruschke 
+
+Journal of Experimental Psychology: General
+
+Abstract: Bayesian estimation for two groups provides complete distributions of credible values for the effect size, group means and their difference, standard deviations and their difference, and the normality of the data. The method handles outliers. The decision rule can accept the null value (unlike traditional t tests) when certainty in the estimate is high (unlike Bayesian model comparison using Bayes factors). The method also yields precise estimates of statistical power for various research goals. The software and programs are free, and run on Macintosh, Linux, and Windows platforms.
+
+Get the manuscript, revised 31 May 2012, [here](). Get the published version here: [doi: 10.1037/a0029146]().
+
+Get the programs from this [zip file](). Be sure to unzip (extract) the zip file after it is saved on you computer. For information about running the programs, see the comments at the top of the file BESTexample.R. 
+New (Sept. 3, 2012): The programs now include a version for estimating the parameters of a single group. The 1-group version is named BEST1G.R. See the example in BEST1Gexample.R and [this blog post]().
+
+For information about installing the software (R, JAGS, rjags, and RStudio), see the comments at the top of the file BESTexample.R, or at [this blog post]().
+
+You can make comments at [the blog](). Search the blog with the phrase "Bayesian estimation".
+
+For a complete tutorial about Bayesian methods, see [the book]().
+
+![model](http://www.indiana.edu/~kruschke/BEST/BESThist.jpg)
+![plot](http://www.indiana.edu/~kruschke/BEST/BESTexample.jpg)
