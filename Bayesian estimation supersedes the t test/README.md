@@ -1,4 +1,4 @@
-Bayesian estimation supersedes the t test.
+Bayesian estimation supersedes the *t* test.
 ====================
 
 [**John K. Kruschke**](http://www.indiana.edu/~kruschke/) 
