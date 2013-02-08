@@ -126,11 +126,11 @@ for ( chainIdx in 1 : nChain ) {
 # RUN THE CHAINS
 
 # burn in
-BurnInSteps = 100
+BurnInSteps = 1000
 modelUpdate( BurnInSteps )
 # actual samples
 samplesSet( c( "b0" , "b1" , "b2" , "b12" , "tau" ) )
-stepsPerChain = ceiling(50000/nChain)
+stepsPerChain = ceiling(100000/nChain)
 thinStep = 2
 modelUpdate( stepsPerChain , thin=thinStep )
 
@@ -173,9 +173,9 @@ for ( stepIdx in 1:chainLength ) {
                        - SDy * (Mx[2]/SDx[2]) * zb2Samp[stepIdx]
                        + SDy * (Mx[1]/SDx[1]) * (Mx[2]/SDx[2]) * zb12Samp[stepIdx] )
     b1Samp[stepIdx] = ( zb1Samp[stepIdx] * SDy / SDx[1]
-                       - zb12Samp[stepIdx] * SDy * (Mx[1]/SDx[1]) * (1/SDx[2]) )
+                       - zb12Samp[stepIdx] * SDy * (1/SDx[1]) * (Mx[2]/SDx[2]) ) # corrected
     b2Samp[stepIdx] = ( zb2Samp[stepIdx] * SDy / SDx[2]
-                       - zb12Samp[stepIdx] * SDy * (1/SDx[1]) * (Mx[2]/SDx[2]) )
+                       - zb12Samp[stepIdx] * SDy * (Mx[1]/SDx[1]) * (1/SDx[2]) ) # corrected
     b12Samp[stepIdx] = zb12Samp[stepIdx] * SDy * (1/SDx[1]) * (1/SDx[2])
 }
 sigmaSamp = zSigmaSamp * SDy
@@ -191,8 +191,8 @@ pairs( cbind( sigmaSamp[thinIdx] , b0Samp[thinIdx] , b1Samp[thinIdx,] ,
        labels=c( "Sigma y" , "Intercept" ,
                  paste("Beta",predictorNames[1],sep="") ,
                  paste("Beta",predictorNames[2],sep="") ,
-                 "Interaction" ) )
-dev.copy2eps(file=paste(fname,"PostPairs.eps",sep=""))
+                 "Interaction" ) , col="skyblue" )
+#dev.copy2eps(file=paste(fname,"PostPairs.eps",sep=""))
 
 # Display the posterior:
 windows(3.5*5,2.75)
@@ -217,7 +217,7 @@ histInfo = plotPost( b2Samp , xlab="Beta Value" , compVal=NULL ,
 histInfo = plotPost( b12Samp , xlab="Interaction Value" , compVal=NULL ,
                      breaks=30 , cex.main=1.67 , cex.lab=1.33 ,
                      main=paste( predictorNames[1],"x",predictorNames[2] ) )
-dev.copy2eps(file=paste(fname,"PostHist.eps",sep=""))
+#dev.copy2eps(file=paste(fname,"PostHist.eps",sep=""))
 
 # Credible slopes as function of value of other predictor:
 source("HDIofMCMC.R")
@@ -233,15 +233,15 @@ for ( x2idx in 1:length(x2comb) ) {
     HDIlim = HDIofMCMC( slope1Samp )
     beta1HDI[,x2idx] = c( HDIlim[1] , mean(slope1Samp) , HDIlim[2] )
 }
-plot( x2comb , beta1HDI[2,] , type="o" , pch="+" , cex=2 , col="grey" ,
+plot( x2comb , beta1HDI[2,] , type="o" , pch="+" , cex=2 , col="skyblue" ,
       ylim=c(min(beta1HDI),max(beta1HDI)) ,
       xlab=bquote("Value of "*.(predictorNames[2])) ,
       ylab=bquote("Slope along "*.(predictorNames[1])) ,
       main="Posterior mean and 95% HDI of slope" ,
       cex.lab=1.5 )
 abline( h=0 , lty="dashed" )
-segments( x2comb , beta1HDI[1,] , x2comb , beta1HDI[3,] , lwd=4 , col="grey" )
-dev.copy2eps(file=paste(fname,"PostSlope1.eps",sep=""))
+segments( x2comb , beta1HDI[1,] , x2comb , beta1HDI[3,] , lwd=4 , col="skyblue" )
+#dev.copy2eps(file=paste(fname,"PostSlope1.eps",sep=""))
 #
 windows(7,5)
 par( mar=c(4,4,3,0) , mgp=c(2,0.7,0) )
@@ -255,14 +255,14 @@ for ( x1idx in 1:length(x1comb) ) {
     HDIlim = HDIofMCMC( slope2Samp )
     beta2HDI[,x1idx] = c( HDIlim[1] , mean(slope2Samp) , HDIlim[2] )
 }
-plot( x1comb , beta2HDI[2,] , type="o" , pch="+" , cex=2 , col="grey" ,
+plot( x1comb , beta2HDI[2,] , type="o" , pch="+" , cex=2 , col="skyblue" ,
       ylim=c(min(beta2HDI),max(beta2HDI)) ,
       xlab=bquote("Value of "*.(predictorNames[1])) ,
       ylab=bquote("Slope along "*.(predictorNames[2])) ,
       main="Posterior mean and 95% HDI of slope" ,
       cex.lab=1.5 )
 abline( h=0 , lty="dashed" )
-segments( x1comb , beta2HDI[1,] , x1comb , beta2HDI[3,] , lwd=4 , col="grey" )
-dev.copy2eps(file=paste(fname,"PostSlope2.eps",sep=""))
+segments( x1comb , beta2HDI[1,] , x1comb , beta2HDI[3,] , lwd=4 , col="skyblue" )
+#dev.copy2eps(file=paste(fname,"PostSlope2.eps",sep=""))
 
 #------------------------------------------------------------------------------

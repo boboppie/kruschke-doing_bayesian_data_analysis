@@ -25,7 +25,8 @@ BernGrid = function( Theta , pTheta , Data ,
 # Hints:
 #  You will need to "source" this function before calling it.
 #  You may want to define a tall narrow window before using it; e.g.,
-#  > windows(7,10)
+#  > source("openGraphSaveGraph.R")
+#  > openGraph(width=7,height=10,mag=0.7)
 
 # Create summary values of Data
 z = sum( Data==1 ) # number of 1's in Data
@@ -39,7 +40,7 @@ pThetaGivenData = pDataGivenTheta * pTheta / pData
 # Plot the results.
 layout( matrix( c( 1,2,3 ) ,nrow=3 ,ncol=1 ,byrow=FALSE ) ) # 3x1 panels
 par( mar=c(3,3,1,0) , mgp=c(2,1,0) , mai=c(0.5,0.5,0.3,0.1) ) # margin settings
-dotsize = 4 # how big to make the plotted dots
+dotsize = 5 # how big to make the plotted dots
 # If the comb has a zillion teeth, it's too many to plot, so plot only a
 # thinned out subset of the teeth.
 nteeth = length(Theta)
@@ -54,7 +55,7 @@ meanTheta = sum( Theta * pTheta ) # mean of prior, for plotting
 plot( Theta[thinIdx] , pTheta[thinIdx] , type="p" , pch="." , cex=dotsize ,
       xlim=c(0,1) , ylim=c(0,1.1*max(pThetaGivenData)) , cex.axis=1.2 ,
       xlab=bquote(theta) , ylab=bquote(p(theta)) , cex.lab=1.5 ,
-      main="Prior" , cex.main=1.5 )
+      main="Prior" , cex.main=1.5 , col="skyblue" )
 if ( meanTheta > .5 ) {
    textx = 0 ; textadj = c(0,1)
 } else {
@@ -68,7 +69,7 @@ plot(Theta[thinIdx] ,pDataGivenTheta[thinIdx] ,type="p" ,pch="." ,cex=dotsize
 	,xlim=c(0,1) ,cex.axis=1.2 ,xlab=bquote(theta) 
 	,ylim=c(0,1.1*max(pDataGivenTheta)) 
 	,ylab=bquote( "p(D|" * theta * ")" )  
-	,cex.lab=1.5 ,main="Likelihood" ,cex.main=1.5 )
+	,cex.lab=1.5 ,main="Likelihood" ,cex.main=1.5 , col="skyblue" )
 if ( z > .5*N ) { textx = 0 ; textadj = c(0,1) }
 else { textx = 1 ; textadj = c(1,1) }
 text( textx ,1.0*max(pDataGivenTheta) ,cex=2.0
@@ -78,7 +79,7 @@ meanThetaGivenData = sum( Theta * pThetaGivenData )
 plot(Theta[thinIdx] ,pThetaGivenData[thinIdx] ,type="p" ,pch="." ,cex=dotsize
 	,xlim=c(0,1) ,ylim=c(0,1.1*max(pThetaGivenData)) ,cex.axis=1.2 
 	,xlab=bquote(theta) ,ylab=bquote( "p(" * theta * "|D)" )
-	,cex.lab=1.5 ,main="Posterior" ,cex.main=1.5 )
+	,cex.lab=1.5 ,main="Posterior" ,cex.main=1.5 , col="skyblue" )
 if ( meanThetaGivenData > .5 ) { textx = 0 ; textadj = c(0,1) } 
 else { textx = 1 ; textadj = c(1,1) }
 text(textx ,1.00*max(pThetaGivenData) ,cex=2.0
@@ -94,16 +95,23 @@ points( Theta[ HDIinfo$indices ] ,
 text( mean( Theta[ HDIinfo$indices ] ) , HDIinfo$height ,
          bquote( .(100*signif(HDIinfo$mass,3)) * "% HDI" ) ,
          adj=c(0.5,-1.5) , cex=1.5 )
-# Mark the left and right ends of the waterline. This does not mark
-# internal divisions of an HDI waterline for multi-modal distributions.
-lowLim = Theta[ min( HDIinfo$indices ) ]
-highLim = Theta[ max( HDIinfo$indices ) ]
-lines( c(lowLim,lowLim) , c(-0.5,HDIinfo$height) , type="l" , lty=2 , lwd=1.5)
-lines( c(highLim,highLim) , c(-0.5,HDIinfo$height) , type="l" , lty=2 , lwd=1.5)
-text( lowLim , HDIinfo$height , bquote(.(round(lowLim,3))) ,
-      adj=c(1.1,-0.1) , cex=1.2 )
-text( highLim , HDIinfo$height , bquote(.(round(highLim,3))) ,
-      adj=c(-0.1,-0.1) , cex=1.2 )
+# Mark the left and right ends of the waterline. 
+# Find indices at ends of sub-intervals:
+inLim = HDIinfo$indices[1] # first point
+for ( idx in 2:(length(HDIinfo$indices)-1) ) {
+  if ( ( HDIinfo$indices[idx] != HDIinfo$indices[idx-1]+1 ) | # jumps on left, OR
+    ( HDIinfo$indices[idx] != HDIinfo$indices[idx+1]-1 ) ) { # jumps on right
+    inLim = c(inLim,HDIinfo$indices[idx]) # include idx
+  }
+}
+inLim = c(inLim,HDIinfo$indices[length(HDIinfo$indices)]) # last point
+# Mark vertical lines at ends of sub-intervals:
+for ( idx in inLim ) {
+  lines( c(Theta[idx],Theta[idx]) , c(-0.5,HDIinfo$height) , type="l" , lty=2 , 
+         lwd=1.5 )
+  text( Theta[idx] , HDIinfo$height , bquote(.(round(Theta[idx],3))) ,
+        adj=c(0.5,-0.1) , cex=1.2 )
+}
 
 return( pThetaGivenData )
 } # end of function

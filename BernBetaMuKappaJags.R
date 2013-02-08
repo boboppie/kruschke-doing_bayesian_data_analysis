@@ -1,9 +1,6 @@
 rm(list = ls())
 graphics.off()
-if ( .Platform$OS.type != "windows" ) { 
-  windows <- function( ... ) X11( ... ) 
-}
-
+source("openGraphSaveGraph.R")
 require(rjags)         # Kruschke, J. K. (2011). Doing Bayesian Data Analysis:
                        # A Tutorial with R and BUGS. Academic Press / Elsevier.
 #------------------------------------------------------------------------------
@@ -106,11 +103,13 @@ codaSamples = coda.samples( jagsModel , variable.names=parameters ,
 #------------------------------------------------------------------------------
 # EXAMINE THE RESULTS.
 
-checkConvergence = F
+checkConvergence = FALSE
 if ( checkConvergence ) {
-  show( summary( codaSamples ) )
-  plot( codaSamples , ask=T )  
-  autocorr.plot( codaSamples , ask=T )
+  openGraph(width=7,height=7)
+  autocorr.plot( codaSamples[[1]] , ask=FALSE )
+  show( gelman.diag( codaSamples ) )
+  effectiveChainLength = effectiveSize( codaSamples ) 
+  show( effectiveChainLength )
 }
 
 # Convert coda-object codaSamples to matrix object for easier handling.
@@ -130,7 +129,7 @@ for ( coinIdx in 1:nCoins ) {
 # Make a graph using R commands:
 source("plotPost.R")
 if ( nCoins <= 5 ) { # Only make this figure if there are not too many coins
-  windows(3.2*3,2.5*(1+nCoins))
+  openGraph(width=3.2*3,height=2.5*(1+nCoins))
   layout( matrix( 1:(3*(nCoins+1)) , nrow=(nCoins+1) , byrow=T ) )
   par(mar=c(2.95,2.95,1.0,0),mgp=c(1.35,0.35,0),oma=c( 0.1, 0.1, 0.1, 0.1))
   nPtsToPlot = 500
@@ -139,12 +138,11 @@ if ( nCoins <= 5 ) { # Only make this figure if there are not too many coins
   plot( muSample[plotIdx] , kappaSample[plotIdx] , type="p" , ylim=kPltLim ,
         xlim=c(0,1) , xlab=expression(mu) , ylab=expression(kappa) , cex.lab=1.5 , 
         col="skyblue" )
-  plotPost( muSample , xlab="mu" , xlim=c(0,1) , main="" , breaks=20 , col="skyblue")
-  plotPost( kappaSample , xlab="kappa" , main="" , breaks=20 , col="skyblue" , 
-            showMode=T ) 
+  plotPost( muSample , xlab=bquote(mu) , xlim=c(0,1) , main="")
+  plotPost( kappaSample , xlab=bquote(kappa) , main="" , showMode=TRUE ) 
   for ( coinIdx in 1:nCoins ) {
-      plotPost( thetaSample[coinIdx,] , xlab=paste("theta",coinIdx,sep="") ,
-                xlim=c(0,1) , main="" , breaks=20 , col="skyblue")
+      plotPost( thetaSample[coinIdx,] , xlab=bquote(theta[.(coinIdx)]) ,
+                xlim=c(0,1) , main="" )
       plot( thetaSample[coinIdx,plotIdx] , muSample[plotIdx] , type="p" ,
             xlim=c(0,1) , ylim=c(0,1) , cex.lab=1.5 ,
             xlab=bquote(theta[.(coinIdx)]) , ylab=expression(mu) , col="skyblue")
@@ -155,11 +153,13 @@ if ( nCoins <= 5 ) { # Only make this figure if there are not too many coins
 } # end if ( nCoins <= ...
 
 #
-windows(width=7,height=5)
+openGraph(width=7,height=5)
 layout( matrix( 1:4 , nrow=2 , byrow=T ) )
 par(mar=c(2.95,2.95,1.0,0),mgp=c(1.35,0.35,0),oma=c( 0.1, 0.1, 0.1, 0.1) )
-plotPost( muSample , xlab="mu" , main="" , breaks=20 , compVal=0.5 , col="skyblue")
-plotPost( kappaSample , xlab="kappa" , main="" , breaks=20 , HDItextPlace=.1 , col="skyblue")
-plotPost( thetaSample[1,] , xlab="theta1" , main="" , breaks=20 , compVal=0.5 , col="skyblue")
-# Uncomment the following if using therapeutic touch data:
-#plotPost( thetaSample[28,] , xlab="theta28" , main="" , breaks=20 , compVal=0.5 , col="skyblue")
+plotPost( muSample , xlab=bquote(mu) , main="" , compVal=0.5 )
+plotPost( kappaSample , xlab=bquote(kappa) , main="" ,  HDItextPlace=.1 ,
+          showMode=TRUE)
+plotPost( thetaSample[1,] , xlab=bquote(theta[1]) , main="" , compVal=0.5 )
+lastIdx = length(z)
+plotPost( thetaSample[lastIdx,] , xlab=bquote(theta[.(lastIdx)]) , 
+          main="" , compVal=0.5 )

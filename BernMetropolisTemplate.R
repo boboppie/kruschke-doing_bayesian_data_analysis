@@ -43,13 +43,13 @@ targetRelProb = function( theta , data ) {
 }
 
 # Specify the length of the trajectory, i.e., the number of jumps to try:
-trajLength = 11112 # arbitrary large number
+trajLength = 55556 # arbitrary large number
 # Initialize the vector that will store the results:
 trajectory = rep( 0 , trajLength )
 # Specify where to start the trajectory:
 trajectory[1] = 0.50 # arbitrary value
 # Specify the burn-in period:
-burnIn = ceiling( .1 * trajLength ) # arbitrary number, less than trajLength
+burnIn = ceiling( 0.1 * trajLength ) # arbitrary number, less than trajLength
 # Initialize accepted, rejected counters, just to monitor performance:
 nAccepted = 0
 nRejected = 0
@@ -90,8 +90,10 @@ acceptedTraj = trajectory[ (burnIn+1) : length(trajectory) ]
 #-----------------------------------------------------------------------
 # Display the posterior.
 
+source("openGraphSaveGraph.R")
 source("plotPost.R")
-mcmcInfo = plotPost( acceptedTraj , xlim=c(0,1) , breaks=30 )
+openGraph(width=5,height=5)
+mcmcInfo = plotPost( acceptedTraj , xlim=c(0,1) , xlab=bquote(theta) )
 
 # Display rejected/accepted ratio in the plot.
 # Get the highest point and mean of the plot for subsequent text positioning:
@@ -134,4 +136,4 @@ text( xpos , 0.9*densMax , bquote( p(D)==.( signif(pData,3) ) ) ,
       adj=c(xadj,0) , cex=1.5 )
 
 # Uncomment next line if you want to save the graph.
-#dev.copy2eps(file="BernMetropolisTemplate.eps")
+saveGraph(file="BernMetropolisTemplate",type="eps")

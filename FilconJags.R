@@ -1,9 +1,7 @@
 graphics.off()
 rm(list=ls(all=TRUE))
 fileNameRoot="FilconJags" # for constructing output filenames
-if ( .Platform$OS.type != "windows" ) { 
-  windows <- function( ... ) X11( ... ) 
-}
+source("openGraphSaveGraph.R")
 require(rjags)         # Kruschke, J. K. (2011). Doing Bayesian Data Analysis:
                        # A Tutorial with R and BUGS. Academic Press / Elsevier.
 #------------------------------------------------------------------------------
@@ -92,11 +90,15 @@ codaSamples = coda.samples( jagsModel , variable.names=parameters ,
 #------------------------------------------------------------------------------
 # EXAMINE THE RESULTS.
 
-checkConvergence = F
+checkConvergence = FALSE
 if ( checkConvergence ) {
-  show( summary( codaSamples ) )
-  plot( codaSamples , ask=T )  
-  autocorr.plot( codaSamples , ask=T )
+  openGraph(width=7,height=7)
+  autocorr.plot( codaSamples[[1]][,c("kappa[1]","kappa[2]","kappa[3]","kappa[4]",
+                                     "mu[1]","mu[2]","mu[3]","mu[4]")] ,
+                 ask=FALSE ) 
+  show( gelman.diag( codaSamples ) )
+  effectiveChainLength = effectiveSize( codaSamples ) 
+  show( effectiveChainLength )
 }
 
 # Convert coda-object codaSamples to matrix object for easier handling.
@@ -115,20 +117,20 @@ save( mu , kappa , mcmcChain , file=paste(fileNameRoot,"MuKappa.Rdata",sep="") )
 chainLength = NCOL(mu)
 
 # Histograms of mu differences:
-windows(10,2.75)
+openGraph(width=10,height=2.75)
 layout( matrix(1:3,nrow=1) )
 source("plotPost.R")
 histInfo = plotPost( mu[1,]-mu[2,] , xlab=expression(mu[1]-mu[2]) , main="" ,
-          breaks=20 , compVal=0 , col="skyblue")
+          compVal=0 )
 histInfo = plotPost( mu[3,]-mu[4,] , xlab=expression(mu[3]-mu[4]) , main="" ,
-          breaks=20 , compVal=0 , col="skyblue")
+          compVal=0 )
 histInfo = plotPost( (mu[1,]+mu[2,])/2 - (mu[3,]+mu[4,])/2 ,
           xlab=expression( (mu[1]+mu[2])/2 - (mu[3]+mu[4])/2 ) ,
-          main="" , breaks=20 , compVal=0 , col="skyblue")
-#savePlot(file=paste(fileNameRoot,"MuDiffs.eps",sep=""),type="eps")
+          main="" , compVal=0 )
+#saveGraph(file=paste(fileNameRoot,"MuDiffs",sep=""),type="eps")
 
 # Scatterplot of mu,kappa in each condition:
-windows()
+openGraph(width=7,height=7)
 muLim = c(.60,1) ; kappaLim = c( 2.0 , 40 ) ; mainLab="Posterior"
 thindex = round( seq( 1 , chainLength , len=300 ) )
 plot( mu[1,thindex] , kappa[1,thindex] , main=mainLab ,
@@ -137,4 +139,4 @@ plot( mu[1,thindex] , kappa[1,thindex] , main=mainLab ,
 points( mu[2,thindex] , kappa[2,thindex] , col="blue" , pch="2" )
 points( mu[3,thindex] , kappa[3,thindex] , col="green" , pch="3" )
 points( mu[4,thindex] , kappa[4,thindex] , col="black" , pch="4" )
-#savePlot(file=paste(fileNameRoot,"Scatter.eps",sep=""),type="eps")
+#saveGraph(file=paste(fileNameRoot,"Scatter",sep=""),type="eps")

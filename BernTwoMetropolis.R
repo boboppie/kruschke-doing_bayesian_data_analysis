@@ -98,9 +98,12 @@ meanTraj =  apply( acceptedTraj , 2 , mean )
 sdTraj = apply( acceptedTraj , 2 , sd )
 
 # Display the sampled points
+graphics.off()
+source("openGraphSaveGraph.R")
+openGraph(width=7,height=7)
 par( pty="s" ) # makes plots in square axes.
 plot( acceptedTraj , type = "o" , xlim = c(0,1) , xlab = bquote(theta[1]) ,
-      ylim = c(0,1) , ylab = bquote(theta[2]) )
+      ylim = c(0,1) , ylab = bquote(theta[2]) , col="skyblue" )
 # Display means and rejected/accepted ratio in plot.
 if ( meanTraj[1] > .5 ) { xpos = 0.0 ; xadj = 0.0
 } else { xpos = 1.0 ; xadj = 1.0 }
@@ -136,8 +139,8 @@ text( xpos , ypos+(.12*(-1)^(ypos)) , bquote( "p(D) = " * .(signif(pdata,3)) ) ,
 	  adj=c(xadj,yadj) , cex=1.5 )
 
 ## Change next line if you want to save the graph.
-want_saved_graph = F # TRUE or FALSE
-if ( want_saved_graph ) { dev.copy2eps(file="BernTwoMetropolis.eps") }
+want_saved_graph = FALSE # TRUE or FALSE
+if ( want_saved_graph ) { saveGraph(file="BernTwoMetropolis",type="eps") }
 
 # Estimate highest density region by evaluating posterior at each point.
 npts = dim( acceptedTraj )[1] ; postProb = rep( 0 , npts )
@@ -148,13 +151,13 @@ for ( ptIdx in 1:npts ) {
 credmass = 0.95
 waterline = quantile( postProb , probs=c(1-credmass) )
 # Display highest density region in new graph
-windows()
+openGraph(width=7,height=7)
 par( pty="s" ) # makes plots in square axes.
-plot( acceptedTraj[ postProb < waterline , ] , type="p" , pch="x" , col="grey" ,
+plot( acceptedTraj[ postProb < waterline , ] , type="p" , pch=21 , col="skyblue" ,
       xlim = c(0,1) , xlab = bquote(theta[1]) ,
       ylim = c(0,1) , ylab = bquote(theta[2]) ,
       main=paste(100*credmass,"% HD region",sep="") )
-points( acceptedTraj[ postProb >= waterline , ] ,  pch="o" , col="black" )
+points( acceptedTraj[ postProb >= waterline , ] ,  pch=19 , col="skyblue" )
 ## Change next line if you want to save the graph.
-want_saved_graph = F # TRUE or FALSE
-if ( want_saved_graph ) { dev.copy2eps(file="BernTwoMetropolisHD.eps") }
+want_saved_graph = FALSE # TRUE or FALSE
+if ( want_saved_graph ) { saveGraph(file="BernTwoMetropolisHD",type="eps") }

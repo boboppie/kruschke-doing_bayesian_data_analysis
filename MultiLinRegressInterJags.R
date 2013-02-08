@@ -98,7 +98,6 @@ zy = standardizeCols( y )
 dataList = list(
            x = zx ,
            y = as.vector( zy ) , # BUGS does not treat 1-column mat as vector
-           nPredictors = nPredictors ,
            nData = nData
 )
 
@@ -120,10 +119,10 @@ initsList = list(
 # RUN THE CHAINS
 
 parameters = c( "b0" , "b1" , "b2" , "b12" , "tau" ) 
-adaptSteps = 500              # Number of steps to "tune" the samplers.
-burnInSteps = 500            # Number of steps to "burn-in" the samplers.
+adaptSteps = 5000             # Number of steps to "tune" the samplers.
+burnInSteps = 10000           # Number of steps to "burn-in" the samplers.
 nChains = 3                   # Number of chains to run.
-numSavedSteps=50000           # Total number of steps in chains to save.
+numSavedSteps=100000          # Total number of steps in chains to save.
 thinSteps=1                   # Number of steps to "thin" (1=keep every step).
 nPerChain = ceiling( ( numSavedSteps * thinSteps ) / nChains ) # Steps per chain.
 # Create, initialize, and adapt the model:
@@ -181,9 +180,9 @@ for ( stepIdx in 1:chainLength ) {
                        - SDy * (Mx[2]/SDx[2]) * zb2Samp[stepIdx]
                        + SDy * (Mx[1]/SDx[1]) * (Mx[2]/SDx[2]) * zb12Samp[stepIdx] )
     b1Samp[stepIdx] = ( zb1Samp[stepIdx] * SDy / SDx[1]
-                       - zb12Samp[stepIdx] * SDy * (Mx[1]/SDx[1]) * (1/SDx[2]) )
+                       - zb12Samp[stepIdx] * SDy * (1/SDx[1]) * (Mx[2]/SDx[2]) ) # corrected
     b2Samp[stepIdx] = ( zb2Samp[stepIdx] * SDy / SDx[2]
-                       - zb12Samp[stepIdx] * SDy * (1/SDx[1]) * (Mx[2]/SDx[2]) )
+                       - zb12Samp[stepIdx] * SDy * (Mx[1]/SDx[1]) * (1/SDx[2]) ) # corrected
     b12Samp[stepIdx] = zb12Samp[stepIdx] * SDy * (1/SDx[1]) * (1/SDx[2])
 }
 sigmaSamp = zSigmaSamp * SDy
@@ -201,8 +200,9 @@ pairs( cbind( sigmaSamp[thinIdx] , b0Samp[thinIdx] , b1Samp[thinIdx,] ,
        labels=c( "Sigma y" , "Intercept" ,
                  paste("Beta",predictorNames[1],sep="") ,
                  paste("Beta",predictorNames[2],sep="") ,
-                 "Interaction" ) )
-savePlot(file=paste(fileNameRoot,"PostPairs.eps",sep=""),type="eps")
+                 "Interaction" ) , col="skyblue" )
+savePlot(file=paste(fileNameRoot,"PostPairs",sep=""),type="eps")
+savePlot(file=paste(fileNameRoot,"PostPairs",sep=""),type="jpg")
 
 # Display the posterior:
 windows(3.5*5,2.75)
@@ -227,7 +227,8 @@ histInfo = plotPost( b2Samp , xlab="Beta Value" , compVal=NULL ,
 histInfo = plotPost( b12Samp , xlab="Interaction Value" , compVal=NULL ,
                      breaks=30 , cex.main=1.67 , cex.lab=1.33 ,
                      main=paste( predictorNames[1],"x",predictorNames[2] ) )
-savePlot(file=paste(fileNameRoot,"PostHist.eps",sep=""),type="eps")
+savePlot(file=paste(fileNameRoot,"PostHist",sep=""),type="eps")
+savePlot(file=paste(fileNameRoot,"PostHist",sep=""),type="jpg")
 
 # Credible slopes as function of value of other predictor:
 source("HDIofMCMC.R")
@@ -243,15 +244,16 @@ for ( x2idx in 1:length(x2comb) ) {
     HDIlim = HDIofMCMC( slope1Samp )
     beta1HDI[,x2idx] = c( HDIlim[1] , mean(slope1Samp) , HDIlim[2] )
 }
-plot( x2comb , beta1HDI[2,] , type="o" , pch="+" , cex=2 , col="grey" ,
+plot( x2comb , beta1HDI[2,] , type="o" , pch="+" , cex=2 , col="skyblue" ,
       ylim=c(min(beta1HDI),max(beta1HDI)) ,
       xlab=bquote("Value of "*.(predictorNames[2])) ,
       ylab=bquote("Slope along "*.(predictorNames[1])) ,
       main="Posterior mean and 95% HDI of slope" ,
       cex.lab=1.5 )
 abline( h=0 , lty="dashed" )
-segments( x2comb , beta1HDI[1,] , x2comb , beta1HDI[3,] , lwd=4 , col="grey" )
-savePlot(file=paste(fileNameRoot,"PostSlope1.eps",sep=""),type="eps")
+segments( x2comb , beta1HDI[1,] , x2comb , beta1HDI[3,] , lwd=4 , col="skyblue" )
+savePlot(file=paste(fileNameRoot,"PostSlope1",sep=""),type="eps")
+savePlot(file=paste(fileNameRoot,"PostSlope1",sep=""),type="jpg")
 #
 windows(7,5)
 par( mar=c(4,4,3,0) , mgp=c(2,0.7,0) )
@@ -265,14 +267,15 @@ for ( x1idx in 1:length(x1comb) ) {
     HDIlim = HDIofMCMC( slope2Samp )
     beta2HDI[,x1idx] = c( HDIlim[1] , mean(slope2Samp) , HDIlim[2] )
 }
-plot( x1comb , beta2HDI[2,] , type="o" , pch="+" , cex=2 , col="grey" ,
+plot( x1comb , beta2HDI[2,] , type="o" , pch="+" , cex=2 , col="skyblue" ,
       ylim=c(min(beta2HDI),max(beta2HDI)) ,
       xlab=bquote("Value of "*.(predictorNames[1])) ,
       ylab=bquote("Slope along "*.(predictorNames[2])) ,
       main="Posterior mean and 95% HDI of slope" ,
       cex.lab=1.5 )
 abline( h=0 , lty="dashed" )
-segments( x1comb , beta2HDI[1,] , x1comb , beta2HDI[3,] , lwd=4 , col="grey" )
-savePlot(file=paste(fileNameRoot,"PostSlope2.eps",sep=""),type="eps")
+segments( x1comb , beta2HDI[1,] , x1comb , beta2HDI[3,] , lwd=4 , col="skyblue" )
+savePlot(file=paste(fileNameRoot,"PostSlope2",sep=""),type="eps")
+savePlot(file=paste(fileNameRoot,"PostSlope2",sep=""),type="jpg")
 
 #------------------------------------------------------------------------------

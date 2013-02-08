@@ -1,8 +1,6 @@
 rm(list = ls())
 graphics.off()
-if ( .Platform$OS.type != "windows" ) { 
-  windows <- function( ... ) X11( ... ) 
-}
+source("openGraphSaveGraph.R")
 
 require(rjags)         # Kruschke, J. K. (2011). Doing Bayesian Data Analysis:
                        # A Tutorial with R and BUGS. Academic Press / Elsevier.
@@ -79,13 +77,13 @@ theta1Sample = mcmcChain[,"theta1"] # Put sampled values in a vector.
 theta2Sample = mcmcChain[,"theta2"] # Put sampled values in a vector.
 
 # Plot the trajectory of the last 500 sampled values.
-windows()
+openGraph(width=7,height=7)
 par( pty="s" )
 chainlength=NROW(mcmcChain)
 plot( theta1Sample[(chainlength-500):chainlength] ,
       theta2Sample[(chainlength-500):chainlength] , type = "o" ,
       xlim = c(0,1) , xlab = bquote(theta[1]) , ylim = c(0,1) ,
-      ylab = bquote(theta[2]) , main="JAGS Result" )
+      ylab = bquote(theta[2]) , main="JAGS Result" , col="skyblue" )
 # Display means in plot.
 theta1mean = mean(theta1Sample)
 theta2mean = mean(theta2Sample)
@@ -97,15 +95,14 @@ text( xpos , ypos ,
 	bquote(
 	"M=" * .(signif(theta1mean,3)) * "," * .(signif(theta2mean,3))
 	) ,adj=c(xadj,yadj) ,cex=1.5  )
-#savePlot(file="BernTwoJags.eps",type="eps")
+#saveGraph(file="BernTwoJags",type="eps")
 
 # Plot a histogram of the posterior differences of theta values.
 thetaDiff = theta1Sample - theta2Sample
 source("plotPost.R")
-windows(7,4)
-plotPost( thetaDiff , xlab=expression(theta[1]-theta[2]) , compVal=0.0 ,
-          breaks=30 , col="skyblue" )
-#savePlot(file="BernTwoJagsDiff.eps",type="eps")
+openGraph(width=7,height=4)
+plotPost( thetaDiff , xlab=expression(theta[1]-theta[2]) , compVal=0.0 )
+#saveGraph(file="BernTwoJagsDiff",type="eps")
 
 # For Exercise 8.5:
 # Posterior prediction. For each step in the chain, use the posterior thetas 

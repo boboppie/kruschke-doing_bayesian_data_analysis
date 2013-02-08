@@ -1,8 +1,6 @@
 rm(list = ls())
 graphics.off()
-if ( .Platform$OS.type != "windows" ) { 
-  windows <- function( ... ) X11( ... ) 
-}
+source("openGraphSaveGraph.R")
 
 require(rjags)         # Kruschke, J. K. (2011). Doing Bayesian Data Analysis:
                        # A Tutorial with R and BUGS. Academic Press / Elsevier.
@@ -79,14 +77,14 @@ mcmcChain = as.matrix( codaSamples )
 thetaSample = mcmcChain
 
 # Make a graph using R commands:
-windows(10,6)
+openGraph(width=10,height=6)
 layout( matrix( c(1,2) , nrow=1 ) )
 plot( thetaSample[1:500] , 1:length(thetaSample[1:500]) , type="o" ,
       xlim=c(0,1) , xlab=bquote(theta) , ylab="Position in Chain" ,
-      cex.lab=1.25 , main="JAGS Results" )
+      cex.lab=1.25 , main="JAGS Results" , col="skyblue" )
 source("plotPost.R")
-histInfo = plotPost( thetaSample , xlim=c(0,1) , col="skyblue" )
-savePlot( file="BernBetaJagsFull.eps" , type="eps" )
+histInfo = plotPost( thetaSample , xlim=c(0,1) , xlab=bquote(theta) )
+saveGraph( file="BernBetaJagsFullPost" , type="eps" )
 
 # Posterior prediction:
 # For each step in the chain, use posterior theta to flip a coin:
@@ -99,11 +97,11 @@ for ( stepIdx in 1:chainLength ) {
 # Jitter the 0,1 y values for plotting purposes:
 yPredJittered = yPred + runif( length(yPred) , -.05 , +.05 )
 # Now plot the jittered values:
-windows(5,5.5)
+openGraph(width=5,height=5.5)
 plot( thetaSample[1:500] , yPredJittered[1:500] , xlim=c(0,1) ,
       main="posterior predictive sample" ,
-      xlab=expression(theta) , ylab="y (jittered)" )
-points( mean(thetaSample) , mean(yPred) , pch="+" , cex=2 )
+      xlab=expression(theta) , ylab="y (jittered)" , col="skyblue" )
+points( mean(thetaSample) , mean(yPred) , pch="+" , cex=2 , col="skyblue" )
 text( mean(thetaSample) , mean(yPred) ,
       bquote( mean(y) == .(signif(mean(yPred),2)) ) ,
       adj=c(1.2,.5) )
@@ -111,4 +109,4 @@ text( mean(thetaSample) , mean(yPred) , srt=90 ,
       bquote( mean(theta) == .(signif(mean(thetaSample),2)) ) ,
       adj=c(1.2,.5) )
 abline( 0 , 1 , lty="dashed" , lwd=2 )
-savePlot( file="BernBetaJagsPost.eps" , type="eps" )
+saveGraph( file="BernBetaJagsFullPred" , type="eps" )

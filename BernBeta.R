@@ -1,4 +1,4 @@
-BernBeta = function( priorShape , dataVec , credMass=0.95 , saveGraph=F ) {
+BernBeta = function( priorShape , dataVec , credMass=0.95 , saveGr=FALSE ) {
 # Bayesian updating for Bernoulli likelihood and beta prior.
 # Input arguments:
 #   priorShape
@@ -18,6 +18,7 @@ BernBeta = function( priorShape , dataVec , credMass=0.95 , saveGraph=F ) {
 # You will need to "source" this function before using it, so R knows
 # that the function exists and how it is defined.
 
+  
 # Check for errors in input arguments:
 if ( length(priorShape) != 2 ) {
    stop("priorShape must have two components.") }
@@ -54,7 +55,8 @@ pDataGivenTheta = Theta^z * (1-Theta)^(N-z)
 # Compute the posterior at each value of theta.
 pThetaGivenData = dbeta( Theta , a+z , b+N-z )
 # Open a window with three panels.
-windows(7,10)
+source("openGraphSaveGraph.R") # read in graph functions
+openGraph(width=7,height=10,mag=0.7)   # open a window for the graph
 layout( matrix( c( 1,2,3 ) ,nrow=3 ,ncol=1 ,byrow=FALSE ) ) # 3x1 panels
 par( mar=c(3,3,1,0) , mgp=c(2,1,0) , mai=c(0.5,0.5,0.3,0.1) ) # margin specs
 maxY = max( c(pTheta,pThetaGivenData) ) # max y for plotting
@@ -62,7 +64,7 @@ maxY = max( c(pTheta,pThetaGivenData) ) # max y for plotting
 plot( Theta , pTheta , type="l" , lwd=3 ,
       xlim=c(0,1) , ylim=c(0,maxY) , cex.axis=1.2 ,
       xlab=bquote(theta) , ylab=bquote(p(theta)) , cex.lab=1.5 ,
-      main="Prior" , cex.main=1.5 )
+      main="Prior" , cex.main=1.5 , col="skyblue" )
 if ( a > b ) { textx = 0 ; textadj = c(0,1) } 
 else { textx = 1 ; textadj = c(1,1) }
 text( textx , 1.0*max(pThetaGivenData) ,
@@ -73,7 +75,7 @@ plot( Theta , pDataGivenTheta , type="l" , lwd=3 ,
       xlim=c(0,1) , cex.axis=1.2 , xlab=bquote(theta) ,
       ylim=c(0,1.1*max(pDataGivenTheta)) ,
       ylab=bquote( "p(D|" * theta * ")" ) ,
-      cex.lab=1.5 , main="Likelihood" , cex.main=1.5 )
+      cex.lab=1.5 , main="Likelihood" , cex.main=1.5 , col="skyblue" )
 if ( z > .5*N ) { textx = 0 ; textadj = c(0,1) }
 else { textx = 1 ; textadj = c(1,1) }
 text( textx , 1.0*max(pDataGivenTheta) , cex=2.0 ,
@@ -82,7 +84,7 @@ text( textx , 1.0*max(pDataGivenTheta) , cex=2.0 ,
 plot( Theta , pThetaGivenData  ,type="l" , lwd=3 ,
       xlim=c(0,1) , ylim=c(0,maxY) , cex.axis=1.2 ,
       xlab=bquote(theta) , ylab=bquote( "p(" * theta * "|D)" ) ,
-      cex.lab=1.5 , main="Posterior" , cex.main=1.5 )
+      cex.lab=1.5 , main="Posterior" , cex.main=1.5 , col="skyblue" )
 if ( a+z > b+N-z ) { textx = 0 ; textadj = c(0,1) }
 else { textx = 1 ; textadj = c(1,1) }
 text( textx , 1.00*max(pThetaGivenData) , cex=2.0 ,
@@ -101,10 +103,10 @@ text( hpdLim[1] , hpdHt , bquote(.(round(hpdLim[1],3))) ,
       adj=c(1.1,-0.1) , cex=1.2 )
 text( hpdLim[2] , hpdHt , bquote(.(round(hpdLim[2],3))) ,
       adj=c(-0.1,-0.1) , cex=1.2 )
-# Construct file name for saved graph, and save the graph.
-if ( saveGraph ) {
-  filename = paste( "BernBeta_",a,"_",b,"_",z,"_",N,".eps" ,sep="")
-  dev.copy2eps( file = filename )
+# Construct filename for saved graph, and save the graph.
+if ( saveGr ) {
+  filename = paste( "BernBeta_",a,"_",b,"_",z,"_",N ,sep="")
+  saveGraph( file = filename , type="eps" )
 }
 return( postShape )
 } # end of function
