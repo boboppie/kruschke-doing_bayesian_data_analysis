@@ -1,4 +1,4 @@
-# Version of May 31, 2012.
+# Version of January 19, 2013.
 # John K. Kruschke  
 # johnkruschke@gmail.com
 # http://www.indiana.edu/~kruschke/BEST/
@@ -31,6 +31,7 @@
 ###      HDIofMCMC.R
 ###      HDIofICDF.R
 ###      BESTexamplePower.R 
+###      openGraphSaveGraph.R
 ### 6. Make sure that R's working directory is the folder in which those 
 ###    files reside. In RStudio, use menu tabs Tools -> Set Working Directory.
 ###    If working in R, use menu tabs File -> Change Dir.
@@ -66,9 +67,9 @@ postInfo = BESTplot( y1 , y2 , mcmcChain , pairsPlot=TRUE )
 # Show detailed summary info on console:
 show( postInfo ) 
 # You can save the plot(s) using the pull-down menu in the R graphics window,
-# or on many platforms you can use R's saveplot() command:
-# savePlot( file="BESTexample" , type="eps" )
-# savePlot( file="BESTexample" , type="jpeg" )
+# or by using the following:
+# saveGraph( file="BESTexample" , type="eps" )
+# saveGraph( file="BESTexample" , type="jpeg" )
 
 # Save the data and results for future use:
 save( y1, y2, mcmcChain, postInfo, file="BESTexampleMCMC.Rdata" )

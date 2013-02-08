@@ -1,5 +1,5 @@
 # MODIFIED FROM BEST.R FOR ONE GROUP INSTEAD OF TWO.
-# Version of September 3, 2012.
+# Version of January 19, 2013.
 # John K. Kruschke  
 # johnkruschke@gmail.com
 # http://www.indiana.edu/~kruschke/BEST/
@@ -12,13 +12,7 @@
 ### ******** SEE FILE BEST1Gexample.R FOR INSTRUCTIONS ************
 ### ***************************************************************
 
-if ( .Platform$OS.type != "windows" ) { 
-  cat( " ** YOU APPEAR TO BE RUNNING ON A NON-WINDOWS OPERATING SYSTEM. **\n")
-  cat( " ** THE GRAPHICAL DISPLAYS MIGHT BE DISTORTED. IF YOU HAVE      **\n")
-  cat( " ** PROBLEMS, PLEASE USE THE SEARCH TERM 'graphics' AT          **\n")
-  cat( " ** http://doingbayesiandataanalysis.blogspot.com/              **\n")
-  windows <- function( ... ) X11( ... ) 
-}
+source("openGraphSaveGraph.R") # graphics functions for Windows, Mac OS, Linux
 
 BEST1Gmcmc = function( y , numSavedSteps=100000, thinSteps=1, showMCMC=FALSE) { 
   # This function generates an MCMC sample from the posterior distribution.
@@ -93,8 +87,11 @@ BEST1Gmcmc = function( y , numSavedSteps=100000, thinSteps=1, showMCMC=FALSE) {
   #------------------------------------------------------------------------------
   # EXAMINE THE RESULTS
   if ( showMCMC ) {
-    windows()
+    openGraph(width=7,height=7)
     autocorr.plot( codaSamples[[1]] , ask=FALSE )
+    show( gelman.diag( codaSamples ) )
+    effectiveChainLength = effectiveSize( codaSamples ) 
+    show( effectiveChainLength )
   }
 
   # Convert coda-object codaSamples to matrix object for easier handling.
@@ -131,7 +128,7 @@ BEST1Gplot = function( y , mcmcChain , compValm=0.0 , ROPEm=NULL ,
   
   if ( pairsPlot ) {
     # Plot the parameters pairwise, to see correlations:
-    windows()
+    openGraph(width=7,height=7)
     nPtToPlot = 1000
     plotIdx = floor(seq(1,length(mu),by=length(mu)/nPtToPlot))
     panel.cor = function(x, y, digits=2, prefix="", cex.cor, ...) {
@@ -155,7 +152,7 @@ BEST1Gplot = function( y , mcmcChain , compValm=0.0 , ROPEm=NULL ,
   
   source("plotPost.R")
   # Set up window and layout:
-  windows(width=6.0,height=5.0)
+  openGraph(width=6.0,height=5.0)
   layout( matrix( c(3,3,4,4,5,5, 1,1,1,1,2,2) , nrow=6, ncol=2 , byrow=FALSE ) )
   par( mar=c(3.5,3.5,2.5,0.5) , mgp=c(2.25,0.7,0) )
   
@@ -185,7 +182,7 @@ BEST1Gplot = function( y , mcmcChain , compValm=0.0 , ROPEm=NULL ,
   histBreaks = sort( c( seq( histCenter-histBinWd/2 , min(xVec)-histBinWd/2 ,
                              -histBinWd ),
                         seq( histCenter+histBinWd/2 , max(xVec)+histBinWd/2 ,
-                             histBinWd ) ) )
+                             histBinWd ) , xLim ) )
   histInfo = hist( y , plot=FALSE , breaks=histBreaks )
   yPlotVec = histInfo$density 
   yPlotVec[ yPlotVec==0.0 ] = NA

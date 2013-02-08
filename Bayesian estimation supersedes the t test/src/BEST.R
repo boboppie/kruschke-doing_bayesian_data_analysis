@@ -1,4 +1,4 @@
-# Version of May 26, 2012.
+# Version of January 19, 2013.
 # John K. Kruschke  
 # johnkruschke@gmail.com
 # http://www.indiana.edu/~kruschke/BEST/
@@ -11,13 +11,7 @@
 ### ******** SEE FILE BESTexample.R FOR INSTRUCTIONS **************
 ### ***************************************************************
 
-if ( .Platform$OS.type != "windows" ) { 
-  cat( " ** YOU APPEAR TO BE RUNNING ON A NON-WINDOWS OPERATING SYSTEM. **\n")
-  cat( " ** THE GRAPHICAL DISPLAYS MIGHT BE DISTORTED. IF YOU HAVE      **\n")
-  cat( " ** PROBLEMS, PLEASE USE THE SEARCH TERM 'graphics' AT          **\n")
-  cat( " ** http://doingbayesiandataanalysis.blogspot.com/              **\n")
-  windows <- function( ... ) X11( ... ) 
-}
+source("openGraphSaveGraph.R") # graphics functions for Windows, Mac OS, Linux
 
 BESTmcmc = function( y1, y2, numSavedSteps=100000, thinSteps=1, showMCMC=FALSE) { 
   # This function generates an MCMC sample from the posterior distribution.
@@ -97,8 +91,11 @@ BESTmcmc = function( y1, y2, numSavedSteps=100000, thinSteps=1, showMCMC=FALSE) 
   #------------------------------------------------------------------------------
   # EXAMINE THE RESULTS
   if ( showMCMC ) {
-    windows()
+    openGraph(width=7,height=7)
     autocorr.plot( codaSamples[[1]] , ask=FALSE )
+    show( gelman.diag( codaSamples ) )
+    effectiveChainLength = effectiveSize( codaSamples ) 
+    show( effectiveChainLength )
   }
 
   # Convert coda-object codaSamples to matrix object for easier handling.
@@ -184,7 +181,7 @@ BESTplot = function( y1 , y2 , mcmcChain , ROPEm=NULL , ROPEsd=NULL ,
   nu = mcmcChain[,"nu"]
   if ( pairsPlot ) {
     # Plot the parameters pairwise, to see correlations:
-    windows()
+    openGraph(width=7,height=7)
     nPtToPlot = 1000
     plotIdx = floor(seq(1,length(mu1),by=length(mu1)/nPtToPlot))
     panel.cor = function(x, y, digits=2, prefix="", cex.cor, ...) {
@@ -204,7 +201,7 @@ BESTplot = function( y1 , y2 , mcmcChain , ROPEm=NULL , ROPEsd=NULL ,
   }
   source("plotPost.R")
   # Set up window and layout:
-  windows(width=6.0,height=8.0)
+  openGraph(width=6.0,height=8.0)
   layout( matrix( c(4,5,7,8,3,1,2,6,9,10) , nrow=5, byrow=FALSE ) )
   par( mar=c(3.5,3.5,2.5,0.5) , mgp=c(2.25,0.7,0) )
   
@@ -235,7 +232,7 @@ BESTplot = function( y1 , y2 , mcmcChain , ROPEm=NULL , ROPEsd=NULL ,
   histBreaks = sort( c( seq( histCenter-histBinWd/2 , min(xVec)-histBinWd/2 ,
                              -histBinWd ),
                         seq( histCenter+histBinWd/2 , max(xVec)+histBinWd/2 ,
-                             histBinWd ) ) )
+                             histBinWd ) , xLim ) )
   histInfo = hist( y1 , plot=FALSE , breaks=histBreaks )
   yPlotVec = histInfo$density 
   yPlotVec[ yPlotVec==0.0 ] = NA
@@ -260,7 +257,7 @@ BESTplot = function( y1 , y2 , mcmcChain , ROPEm=NULL , ROPEsd=NULL ,
   histBreaks = sort( c( seq( histCenter-histBinWd/2 , min(xVec)-histBinWd/2 ,
                              -histBinWd ),
                         seq( histCenter+histBinWd/2 , max(xVec)+histBinWd/2 ,
-                             histBinWd ) ) )
+                             histBinWd ) , xLim ) )
   histInfo = hist( y2 , plot=FALSE , breaks=histBreaks )
   yPlotVec = histInfo$density 
   yPlotVec[ yPlotVec==0.0 ] = NA
@@ -470,7 +467,7 @@ makeData = function( mu1 , sd1 , mu2 , sd2 , nPerGrp ,
   y2 = c(y2,y2Out)
   #
   # Set up window and layout:
-  windows() # Plot the data.
+  openGraph(width=7,height=7) # Plot the data.
   layout(matrix(1:2,nrow=2))
   histInfo = hist( y1 , main="Simulated Data" , col="pink2" , border="white" , 
                    xlim=range(c(y1,y2)) , breaks=30 , prob=TRUE )
