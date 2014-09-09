@@ -18,9 +18,8 @@
 graphics.off()
 rm(list=ls(all=TRUE))
 fileNameRoot="JagsCensoringExample" # for constructing output filenames
-if ( .Platform$OS.type != "windows" ) { 
-  windows <- function( ... ) X11( ... ) 
-}
+source("openGraphSaveGraph.R")
+source("plotPost.R")
 require(rjags)         # Kruschke, J. K. (2011). Doing Bayesian Data Analysis:
                        # A Tutorial with R and BUGS. Academic Press / Elsevier.
 
@@ -76,7 +75,7 @@ dataList = list( y = y , N = N
 sigmaInit = 15
 muInit = 100
 # intial values of censored data:
-yInit = y 
+yInit = rep( NA , length(y) )
 yInit[isCensored] = censorLimitVec[isCensored]+1
 
 initsList = list( mu=muInit , sigma = sigmaInit 
@@ -90,7 +89,7 @@ parameters = c( "mu" , "sigma" )
 adaptSteps = 1000 # overkill, just shows general form
 burnInSteps = 2000 # overkill, just shows general form
 nChains = 3 
-numSavedSteps=10000 # for real research, this should be much bigger
+numSavedSteps=50000
 thinSteps=1
 nIter = ceiling( ( numSavedSteps * thinSteps ) / nChains )
 # Create, initialize, and adapt the model:
@@ -109,22 +108,22 @@ codaSamples = coda.samples( jagsModel , variable.names=parameters ,
 #------------------------------------------------------------------------------
 # EXAMINE THE RESULTS
 
-checkConvergence = F
+checkConvergence = FALSE
 if ( checkConvergence ) {
-  show( summary( codaSamples ) )
-  windows()
-  plot( codaSamples , ask=F )  
-  windows()
-  autocorr.plot( codaSamples , ask=F )
+  openGraph(width=7,height=7)
+  autocorr.plot( codaSamples[[1]] , ask=FALSE ) 
+  show( gelman.diag( codaSamples ) )
+  effectiveChainLength = effectiveSize( codaSamples ) 
+  show( effectiveChainLength )
 }
+
 
 # Convert coda-object codaSamples to matrix object for easier handling.
 # But note that this concatenates the different chains into one long chain.
 # Result is mcmcChain[ stepIdx , paramIdx ]
 mcmcChain = as.matrix( codaSamples )
 
-source("plotPost.R")
-windows(width=10,height=3.0)
+openGraph(width=10,height=3.0)
 layout(matrix(1:3,nrow=1))
 par( mar=c(3.5,1.5,3.0,0.5) , mgp=c(2,0.7,0) )
 # plot the data:
@@ -138,10 +137,10 @@ lines( xGrid , dnorm( xGrid , mean=desiredMean , sd=desiredSD )/pnorm(1) , lwd=3
 abline(v=censorLimit,lty="dotted",col="red")
 # plot the posterior:
 histInfo = plotPost( mcmcChain[,"mu"] , main="Mu" , xlab=expression(mu) , 
-                     breaks=30 , showMode=F ,  col="skyblue" )
+                     showMode=FALSE )
 histInfo = plotPost( mcmcChain[,"sigma"] , main="Sigma" , xlab=expression(sigma) , 
-                     breaks=30 , showMode=T ,  col="skyblue" )
+                     showMode=TRUE )
 # save plot:
-savePlot( file=paste(fileNameRoot,".eps",sep="") , type="eps" )
-savePlot( file=paste(fileNameRoot,".jpg",sep="") , type="jpg" )
+saveGraph( file=fileNameRoot , type="eps" )
+saveGraph( file=fileNameRoot , type="jpg" )
   

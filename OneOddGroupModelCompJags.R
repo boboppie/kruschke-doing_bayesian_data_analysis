@@ -1,9 +1,7 @@
 graphics.off()
 rm(list=ls(all=TRUE))
 fileNameRoot="OneOddGroupModelCompJags" # for constructing output filenames
-if ( .Platform$OS.type != "windows" ) { 
-  windows <- function( ... ) X11( ... ) 
-}
+source("openGraphSaveGraph.R")
 require(rjags)         # Kruschke, J. K. (2011). Doing Bayesian Data Analysis:
                        # A Tutorial with R and BUGS. Academic Press / Elsevier.
 #------------------------------------------------------------------------------
@@ -151,17 +149,17 @@ pM1 = sum( modelIdxSample == 1 ) / length( modelIdxSample )
 pM2 = 1 - pM1
 string1 =paste("p(DiffMu|D)=",round(pM1,3),sep="")
 string2 =paste("p(SameMu|D)=",round(pM2,3),sep="")
-windows(10,4)
+openGraph(10,4)
 nStepsToPlot = 1000
 plot( 1:nStepsToPlot , modelIdxSample[1:nStepsToPlot] , type="l" ,
       xlab="Step in Markov chain" , ylab="Model Index (1, 2)" ,
       main=paste(string1,", ",string2,sep="") )
-savePlot(file=paste(fileNameRoot,"_mdlIdx",".eps",sep="") , type="eps")
+saveGraph(file=paste(fileNameRoot,"_mdlIdx",".eps",sep="") , type="eps")
 
 # Display the mu0 posterior
 mu0sampleM1 = mcmcChain[, "mu0" ][ modelIdxSample == 1 ]
 mu0sampleM2 = mcmcChain[, "mu0" ][ modelIdxSample == 2 ]
-windows()
+openGraph()
 layout( matrix(1:2,nrow=2) )
 hist( mu0sampleM1 , main="Post. mu0 for M = 1 (DiffMu)" ,
       xlab=expression(mu[0]) , freq=F , xlim=c(0,1) ,
@@ -169,7 +167,7 @@ hist( mu0sampleM1 , main="Post. mu0 for M = 1 (DiffMu)" ,
 hist( mu0sampleM2 , main="Post. mu0 for M = 2 (SameMu)"  ,
       xlab=expression(mu[0]) , freq=F , xlim=c(0,1) ,
       col="grey" , border="white" )
-savePlot(file=paste(fileNameRoot,"_mu0",".eps",sep="") , type="eps")
+saveGraph(file=paste(fileNameRoot,"_mu0",".eps",sep="") , type="eps")
 
 # Display the mu[j] posterior
 mu1sampleM1 = mcmcChain[, "mu[1]" ][ modelIdxSample == 1 ]
@@ -180,7 +178,7 @@ mu1sampleM2 = mcmcChain[, "mu[1]" ][ modelIdxSample == 2 ]
 mu2sampleM2 = mcmcChain[, "mu[2]" ][ modelIdxSample == 2 ]
 mu3sampleM2 = mcmcChain[, "mu[3]" ][ modelIdxSample == 2 ]
 mu4sampleM2 = mcmcChain[, "mu[4]" ][ modelIdxSample == 2 ]
-windows(10,5)
+openGraph(10,5)
 layout( matrix(1:8,nrow=2,byrow=T) )
 hist( mu1sampleM1 , main="Post. mu[1] for M = 1 (DiffMu)" ,
       xlab=expression(mu[1]) , freq=F , xlim=c(0,1) ,
@@ -206,12 +204,12 @@ hist( mu3sampleM2 , main="Post. mu[3] for M = 2 (SameMu)" ,
 hist( mu4sampleM2 , main="Post. mu[4] for M = 2 (SameMu)" ,
       xlab=expression(mu[4]) , freq=F , xlim=c(0,1) ,
       col="grey" , border="white" )
-savePlot(file=paste(fileNameRoot,"_mucond",".eps",sep="") , type="eps")
+saveGraph(file=paste(fileNameRoot,"_mucond",".eps",sep="") , type="eps")
 
 # Display the differences of mu[j]'s
 muSample = rbind( mu1sampleM1 , mu2sampleM1 , mu3sampleM1 , mu4sampleM1 )
 source("plotPost.R")
-windows(10,5)
+openGraph(10,5)
 layout( matrix(1:6,nrow=2,ncol=3,byrow=T) )
 xmin = -0.25
 xmax = 0.25
@@ -225,4 +223,4 @@ for ( i in 1:3 ) {
                   main="" , xlim=c(xmin,xmax) )
     }
 }
-savePlot(file=paste(fileNameRoot,"_mudiff",".eps",sep="") , type="eps")
+saveGraph(file=paste(fileNameRoot,"_mudiff",".eps",sep="") , type="eps")

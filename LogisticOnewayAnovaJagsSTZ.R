@@ -1,9 +1,7 @@
 graphics.off()
 rm(list=ls(all=TRUE))
 fileNameRoot="LogisticOnewayAnovaJagsSTZ" # for constructing output filenames
-if ( .Platform$OS.type != "windows" ) { 
-  windows <- function( ... ) X11( ... ) 
-}
+source("openGraphSaveGraph.R")
 require(rjags)         # Kruschke, J. K. (2011). Doing Bayesian Data Analysis:
                        # A Tutorial with R and BUGS. Academic Press / Elsevier.
 #------------------------------------------------------------------------------
@@ -165,9 +163,9 @@ codaSamples = coda.samples( jagsModel , variable.names=parameters ,
 checkConvergence = F
 if ( checkConvergence ) {
   show( summary( codaSamples ) )
-  windows()
+  openGraph()
   plot( codaSamples , ask=F )  
-  windows()
+  openGraph()
   autocorr.plot( codaSamples , ask=F )
 }
 
@@ -189,12 +187,12 @@ for ( xidx in 1:dataList$NxLvl ) {
 
 source("plotPost.R")
 # plot the SD:
-windows()
+openGraph()
 par( mar=c(3,1,2.5,0) , mgp=c(2,0.7,0) )
 histInfo = plotPost( aSDSample , xlab="aSD" , main="a SD" , breaks=30 , showMode=T)
-savePlot(file=paste(fileNameRoot,"SD.eps",sep=""),type="eps")
+saveGraph(file=paste(fileNameRoot,"SD.eps",sep=""),type="eps")
 # Plot b values:
-windows(dataList$NxLvl*2.75,2.5)
+openGraph(dataList$NxLvl*2.75,2.5)
 layout( matrix( 1:dataList$NxLvl , nrow=1 ) )
 par( mar=c(3,1,2.5,0) , mgp=c(2,0.7,0) )
 for ( xidx in 1:dataList$NxLvl ) {
@@ -202,10 +200,10 @@ for ( xidx in 1:dataList$NxLvl ) {
               xlab=bquote(beta[.(xidx)]) ,
               main=paste(xnames[xidx])  )
 }
-savePlot(file=paste(fileNameRoot,"b.eps",sep=""),type="eps")
+saveGraph(file=paste(fileNameRoot,"b.eps",sep=""),type="eps")
 
 # Consider parameter correlations:
-windows()
+openGraph()
 nPts=700 ; thinIdx=round(seq(1,chainLength,length=nPts))
 pairs( cbind( b0Sample[thinIdx] , t(bSample[,thinIdx]) , kSample[thinIdx] ) ,
        labels=c("b0",xnames,"k") )
@@ -216,7 +214,7 @@ if ( nContrasts > 0 ) {
    nPlotPerRow = 5
    nPlotRow = ceiling(nContrasts/nPlotPerRow)
    nPlotCol = ceiling(nContrasts/nPlotRow)
-   windows(3.75*nPlotCol,2.5*nPlotRow)
+   openGraph(3.75*nPlotCol,2.5*nPlotRow)
    layout( matrix(1:(nPlotRow*nPlotCol),nrow=nPlotRow,ncol=nPlotCol,byrow=T) )
    par( mar=c(4,0.5,2.5,0.5) , mgp=c(2,0.7,0) )
    for ( cIdx in 1:nContrasts ) {
@@ -228,7 +226,7 @@ if ( nContrasts > 0 ) {
                 cex.lab = 1.5 ,
                 main=paste( "Contrast:", names(contrastList)[cIdx] ) )
    }
-   savePlot(file=paste(fileNameRoot,"xContrasts.eps",sep=""),type="eps")
+   saveGraph(file=paste(fileNameRoot,"xContrasts.eps",sep=""),type="eps")
 }
 
 #==============================================================================
@@ -240,11 +238,11 @@ cat("\n------------------------------------------------------------------\n\n")
 print( summary( aovresult ) )
 cat("\n------------------------------------------------------------------\n\n")
 print( model.tables( aovresult , "means" ) , digits=4 )
-windows()
+openGraph()
 boxplot( y ~ x , data = theData )
 cat("\n------------------------------------------------------------------\n\n")
 print( TukeyHSD( aovresult , "x" , ordered = FALSE ) )
-windows()
+openGraph()
 plot( TukeyHSD( aovresult , "x" ) )
 if ( F ) {
   for ( xIdx1 in 1:(NxLvls-1) ) {

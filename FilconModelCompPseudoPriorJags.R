@@ -1,9 +1,8 @@
 graphics.off()
 rm(list=ls(all=TRUE))
 fileNameRoot="FilconModelCompPseudoPriorJags" # for constructing output filenames
-if ( .Platform$OS.type != "windows" ) { 
-  windows <- function( ... ) X11( ... ) 
-}
+source("openGraphSaveGraph.R")
+source("plotPost.R")
 require(rjags)         # Kruschke, J. K. (2011). Doing Bayesian Data Analysis:
                        # A Tutorial with R and BUGS. Academic Press / Elsevier.
 #------------------------------------------------------------------------------
@@ -130,11 +129,13 @@ codaSamples = coda.samples( jagsModel , variable.names=parameters ,
 #------------------------------------------------------------------------------
 # EXAMINE THE RESULTS.
 
-checkConvergence = F
+checkConvergence = FALSE
 if ( checkConvergence ) {
-  show( summary( codaSamples ) )
-  plot( codaSamples , ask=T )  
-  autocorr.plot( codaSamples , ask=T )
+  openGraph(width=7,height=7)
+  autocorr.plot( codaSamples[[1]] , ask=FALSE )
+  show( gelman.diag( codaSamples ) )
+  effectiveChainLength = effectiveSize( codaSamples ) 
+  show( effectiveChainLength )
 }
 
 # Convert coda-object codaSamples to matrix object for easier handling.
@@ -147,24 +148,24 @@ pM1 = sum( modelIdxSample == 1 ) / length( modelIdxSample )
 pM2 = 1 - pM1
 string1 =paste("p(M1|D)=",round(pM1,3),sep="")
 string2 =paste("p(M2|D)=",round(pM2,3),sep="")
-windows(10,4)
+openGraph(10,4)
 plot( 1:length(modelIdxSample) , modelIdxSample , type="l" ,
       xlab="Step in Markov chain" , ylab="Model Index (1, 2)" ,
-      main=paste(string1,", ",string2,sep="") )
-savePlot( file=paste(fileNameRoot,"_mdlIdx",".eps",sep="") , type="eps" )
+      main=paste(string1,", ",string2,sep="") , col="skyblue" )
+saveGraph( file=paste(fileNameRoot,"_mdlIdx",sep="") , type="eps" )
 
 kappa0sampleM1 = mcmcChain[, "kappa0" ][ modelIdxSample == 1 ]
 kappa0sampleM2 = mcmcChain[, "kappa0" ][ modelIdxSample == 2 ]
-windows()
+openGraph()
 layout( matrix(1:2,nrow=2) )
 hist( kappa0sampleM1 , main="Post. kappa0 for M = 1" ,
       xlab=expression(kappa[0]) , xlim=c(0,30) , freq=F , ylab="" ,
-      col="grey" , border="white" , cex.lab=1.75 , breaks=c(seq(0,30,len=19),10000) )
+      col="skyblue" , border="white" , cex.lab=1.75 , breaks=c(seq(0,30,len=19),10000) )
 lines( seq(0,30,.1) , dgamma( seq(0,30,.1) , 1 , .1 ) )
 hist( kappa0sampleM2 , main="Post. kappa0 for M = 2"  ,
       xlab=expression(kappa[0]) , xlim=c(0,30) , freq=F , ylab="" ,
-      col="grey" , border="white" , cex.lab=1.75 , breaks=c(seq(0,30,len=19),10000) )
-savePlot( file=paste(fileNameRoot,"_k0",".eps",sep="") , type="eps" )
+      col="skyblue" , border="white" , cex.lab=1.75 , breaks=c(seq(0,30,len=19),10000) )
+saveGraph( file=paste(fileNameRoot,"_k0",sep="") , type="eps" )
 
 kappa1sampleM1 = mcmcChain[, "kappa[1]" ][ modelIdxSample == 1 ]
 kappa2sampleM1 = mcmcChain[, "kappa[2]" ][ modelIdxSample == 1 ]
@@ -174,51 +175,50 @@ kappa1sampleM2 = mcmcChain[, "kappa[1]" ][ modelIdxSample == 2 ]
 kappa2sampleM2 = mcmcChain[, "kappa[2]" ][ modelIdxSample == 2 ]
 kappa3sampleM2 = mcmcChain[, "kappa[3]" ][ modelIdxSample == 2 ]
 kappa4sampleM2 = mcmcChain[, "kappa[4]" ][ modelIdxSample == 2 ]
-windows(10,5)
+openGraph(10,5)
 layout( matrix(1:8,nrow=2,byrow=T) )
 hist( kappa1sampleM1 , main="Post. kappa[1] for M = 1" ,
       xlab=expression(kappa[1]) , xlim=c(0,30) , freq=F , ylab="" ,
-      col="grey" , border="white" , cex.lab=1.75 , breaks=c(seq(0,30,len=19),10000) )
+      col="skyblue" , border="white" , cex.lab=1.75 , breaks=c(seq(0,30,len=19),10000) )
 hist( kappa2sampleM1 , main="Post. kappa[2] for M = 1" ,
       xlab=expression(kappa[2]) , xlim=c(0,30) , freq=F , ylab="" ,
-      col="grey" , border="white" , cex.lab=1.75 , breaks=c(seq(0,30,len=19),10000) )
+      col="skyblue" , border="white" , cex.lab=1.75 , breaks=c(seq(0,30,len=19),10000) )
 hist( kappa3sampleM1 , main="Post. kappa[3] for M = 1" ,
       xlab=expression(kappa[3]) , xlim=c(0,30) , freq=F , ylab="" ,
-      col="grey" , border="white" , cex.lab=1.75 , breaks=c(seq(0,30,len=19),10000) )
+      col="skyblue" , border="white" , cex.lab=1.75 , breaks=c(seq(0,30,len=19),10000) )
 hist( kappa4sampleM1 , main="Post. kappa[4] for M = 1" ,
       xlab=expression(kappa[4]) , xlim=c(0,30) , freq=F , ylab="" ,
-      col="grey" , border="white" , cex.lab=1.75 , breaks=c(seq(0,30,len=19),10000) )
+      col="skyblue" , border="white" , cex.lab=1.75 , breaks=c(seq(0,30,len=19),10000) )
 hist( kappa1sampleM2 , main="Post. kappa[1] for M = 2" ,
       xlab=expression(kappa[1]) , xlim=c(0,30) , freq=F , ylab="" ,
-      col="grey" , border="white" , cex.lab=1.75 , breaks=c(seq(0,30,len=19),10000) )
+      col="skyblue" , border="white" , cex.lab=1.75 , breaks=c(seq(0,30,len=19),10000) )
 lines( seq(0,30,.1) , dgamma( seq(0,30,.1) , 1 , .1 ) )
 hist( kappa2sampleM2 , main="Post. kappa[2] for M = 2" ,
       xlab=expression(kappa[2]) , xlim=c(0,30) , freq=F , ylab="" ,
-      col="grey" , border="white" , cex.lab=1.75 , breaks=c(seq(0,30,len=19),10000) )
+      col="skyblue" , border="white" , cex.lab=1.75 , breaks=c(seq(0,30,len=19),10000) )
 lines( seq(0,30,.1) , dgamma( seq(0,30,.1) , 1 , .1 ) )
 hist( kappa3sampleM2 , main="Post. kappa[3] for M = 2" ,
       xlab=expression(kappa[3]) , xlim=c(0,30) , freq=F , ylab="" ,
-      col="grey" , border="white" , cex.lab=1.75 , breaks=c(seq(0,30,len=19),10000) )
+      col="skyblue" , border="white" , cex.lab=1.75 , breaks=c(seq(0,30,len=19),10000) )
 lines( seq(0,30,.1) , dgamma( seq(0,30,.1) , 1 , .1 ) )
 hist( kappa4sampleM2 , main="Post. kappa[4] for M = 2" ,
       xlab=expression(kappa[4]) , xlim=c(0,30) , freq=F , ylab="" ,
-      col="grey" , border="white" , cex.lab=1.75 , breaks=c(seq(0,30,len=19),10000) )
+      col="skyblue" , border="white" , cex.lab=1.75 , breaks=c(seq(0,30,len=19),10000) )
 lines( seq(0,30,.1) , dgamma( seq(0,30,.1) , 1 , .1 ) )
-savePlot( file=paste(fileNameRoot,"_kcond",".eps",sep="") , type="eps" )
+saveGraph( file=paste(fileNameRoot,"_kcond",sep="") , type="eps" )
 
-source("plotPost.R")
-windows(10,5)
+openGraph(10,5)
 layout( matrix(1:6,nrow=2,byrow=T) )
 histInfo = plotPost( kappa1sampleM1 - kappa2sampleM1 , cex.lab=2 ,
-        xlab=bquote(kappa[1]        -kappa[2]) , compVal=0 , breaks=20 )
+        xlab=bquote(kappa[1]        -kappa[2]) , compVal=0  )
 histInfo = plotPost( kappa1sampleM1 - kappa3sampleM1 , cex.lab=2 ,
-        xlab=bquote(kappa[1]        -kappa[3]) , compVal=0 , breaks=20 )
+        xlab=bquote(kappa[1]        -kappa[3]) , compVal=0  )
 histInfo = plotPost( kappa1sampleM1 - kappa4sampleM1 , cex.lab=2 ,
-        xlab=bquote(kappa[1]        -kappa[4]) , compVal=0 , breaks=20 )
+        xlab=bquote(kappa[1]        -kappa[4]) , compVal=0  )
 histInfo = plotPost( kappa2sampleM1 - kappa3sampleM1 , cex.lab=2 ,
-        xlab=bquote(kappa[2]        -kappa[3]) , compVal=0 , breaks=20 )
+        xlab=bquote(kappa[2]        -kappa[3]) , compVal=0  )
 histInfo = plotPost( kappa2sampleM1 - kappa4sampleM1 , cex.lab=2 ,
-        xlab=bquote(kappa[2]        -kappa[4]) , compVal=0 , breaks=20 )
+        xlab=bquote(kappa[2]        -kappa[4]) , compVal=0  )
 histInfo = plotPost( kappa3sampleM1 - kappa4sampleM1 , cex.lab=2 ,
-        xlab=bquote(kappa[3]        -kappa[4]) , compVal=0 , breaks=20 )
-savePlot( file=paste(fileNameRoot,"_kdiff",".eps",sep="") , type="eps" )
+        xlab=bquote(kappa[3]        -kappa[4]) , compVal=0  )
+saveGraph( file=paste(fileNameRoot,"_kdiff",sep="") , type="eps" )

@@ -158,6 +158,8 @@ plot( trajectoryX , relprob[2:(length(relprob)-1)]
 	, ylim = c(0,max(relprob)) , ylab=expression(P(theta))  ,cex.lab=1.5)
 
 # Save the plot as an EPS file.
-filename = paste( "BinomMCMCdemowalk_", distribname ,".eps",sep="")
-dev.copy2eps(file=filename)
+# To save graphs, please see update at
+# http://doingbayesiandataanalysis.blogspot.com/2013/01/uniform-r-code-for-opening-saving.html
+#filename = paste( "BinomMCMCdemowalk_", distribname ,".eps",sep="")
+#dev.copy2eps(file=filename)
 

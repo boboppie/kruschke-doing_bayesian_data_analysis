@@ -98,12 +98,14 @@ for ( stepIdx in 1:chainLength ) {
 yPredJittered = yPred + runif( length(yPred) , -.05 , +.05 )
 # Now plot the jittered values:
 openGraph(width=5,height=5.5)
+par( mar=c(3.5,3.5,2.5,1) , mgp=c(2,0.7,0) )
 plot( thetaSample[1:500] , yPredJittered[1:500] , xlim=c(0,1) ,
-      main="posterior predictive sample" ,
-      xlab=expression(theta) , ylab="y (jittered)" , col="skyblue" )
+      main="posterior predicted sample" ,
+      xlab=expression(theta) , ylab=expression(hat(y)*" "*(jittered)) , 
+      col="skyblue" )
 points( mean(thetaSample) , mean(yPred) , pch="+" , cex=2 , col="skyblue" )
 text( mean(thetaSample) , mean(yPred) ,
-      bquote( mean(y) == .(signif(mean(yPred),2)) ) ,
+      bquote( mean(hat(y)) == .(signif(mean(yPred),2)) ) ,
       adj=c(1.2,.5) )
 text( mean(thetaSample) , mean(yPred) , srt=90 ,
       bquote( mean(theta) == .(signif(mean(thetaSample),2)) ) ,

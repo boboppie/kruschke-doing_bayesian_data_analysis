@@ -1,9 +1,7 @@
 graphics.off()
 rm(list=ls(all=TRUE))
 fileNameRoot="MultipleLogisticRegressionJags" # for constructing output filenames
-if ( .Platform$OS.type != "windows" ) { 
-  windows <- function( ... ) X11( ... ) 
-}
+source("openGraphSaveGraph.R")
 require(rjags)         # Kruschke, J. K. (2011). Doing Bayesian Data Analysis:
                        # A Tutorial with R and BUGS. Academic Press / Elsevier.
 #------------------------------------------------------------------------------
@@ -124,9 +122,9 @@ codaSamples = coda.samples( jagsModel , variable.names=parameters ,
 checkConvergence = F
 if ( checkConvergence ) {
   show( summary( codaSamples ) )
-  windows()
+  openGraph()
   plot( codaSamples , ask=F )  
-  windows()
+  openGraph()
   autocorr.plot( codaSamples , ask=F )
 }
 
@@ -165,18 +163,18 @@ source("plotPost.R")
       
   
 # Examine sampled values, z scale:
-windows()
+openGraph()
 thinIdx = ceiling(seq(1,chainLength,length=700))
 pairs(  cbind( zb0Sample[thinIdx] , zbSample[thinIdx,] )  ,
        labels=c( "zb0", paste("zb",predictorNames,sep="") ) )
 # Examine sampled values, original scale:
-windows()
+openGraph()
 pairs( cbind( b0Sample[thinIdx] , bSample[thinIdx,] ) ,
        labels=c( "b0", paste("b_",predictorNames,sep="") ) )
-savePlot(file=paste(fileNameRoot,"PostPairs.eps",sep=""),type="eps")
+saveGraph(file=paste(fileNameRoot,"PostPairs.eps",sep=""),type="eps")
 
 # Display the posterior :
-windows(3.5*(1+nPredictors),2.75)
+openGraph(3.5*(1+nPredictors),2.75)
 layout( matrix(1:(1+nPredictors),nrow=1) )
 histInfo = plotPost( b0Sample , xlab="b0 Value" , compVal=NULL , breaks=30 , 
                      main=paste( "logit(p(", predictedName ,
@@ -186,13 +184,13 @@ histInfo = plotPost( bSample[,bIdx] , xlab=paste("b",bIdx," Value",sep="") ,
                      compVal=0.0 , breaks=30 ,
                      main=paste(predictorNames[bIdx]) )
 }
-savePlot(file=paste(fileNameRoot,"PostHist.eps",sep=""),type="eps")
+saveGraph(file=paste(fileNameRoot,"PostHist.eps",sep=""),type="eps")
 
 # Plot data with .5 level contours of believable logistic surfaces.
 # The contour lines are best interpreted when there are only two predictors.
 for ( p1idx in 1:(nPredictors-1) ) {
   for ( p2idx in (p1idx+1):nPredictors ) {
-    windows()
+    openGraph()
     xRange = range(x[,p1idx])
     yRange = range(x[,p2idx])
     # make empty plot
@@ -214,7 +212,7 @@ for ( p1idx in 1:(nPredictors-1) ) {
       points( x[rowIdx,p1idx] , x[rowIdx,p2idx] , pch=as.character(yVal) ,
               cex=1.75 )
     }
-    savePlot(file=paste(fileNameRoot,"PostContours",p1idx,p2idx,".eps",sep=""),type="eps")
+    saveGraph(file=paste(fileNameRoot,"PostContours",p1idx,p2idx,".eps",sep=""),type="eps")
   }
 }
 

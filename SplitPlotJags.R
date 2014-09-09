@@ -6,9 +6,7 @@
 graphics.off()
 rm(list=ls(all=TRUE))
 fileNameRoot="SplitPlotJags" # for constructing output filenames
-if ( .Platform$OS.type != "windows" ) { 
-  windows <- function( ... ) X11( ... ) 
-}
+source("openGraphSaveGraph.R")
 require(rjags)
 # Programmed by John Kruschke, Dec 2011 - May 2012, in the style of
 # Kruschke, J. K. (2011). Doing Bayesian data analysis:
@@ -270,7 +268,7 @@ if ( checkConvergence ) {
   #show( summary( codaSamples ) )
   #plot( codaSamples , ask=TRUE ) # caution: takes a long time with long chains
   #autocorr.plot( codaSamples[[1]] , ask=TRUE )
-  windows()
+  openGraph()
   layout(matrix(1:4,nrow=2,byrow=TRUE))
   chainPart = 1:2000
   plot( chainPart , axb[1,1,chainPart] , main="axb[1,1]" , type="l" )
@@ -288,7 +286,7 @@ bColor = "lawngreen"
 axbColor = "lavender"
 
 # Display the SD's
-windows()
+openGraph()
 layout( matrix(c(1:6),nrow=2,byrow=T) )
 par( mar=c(3,1,2.5,0) , mgp=c(2,0.7,0) )
 histInfo = plotPost( aSD , xlab="aSD" , main=paste(aName,"SD") , 
@@ -303,9 +301,9 @@ histInfo = plotPost( sSD , xlab="sSD" , main=paste(sName,"[within",aName,"] SD")
                       col="skyblue" , showMode=T )
 plot(-1,-1,xlim=c(0,2),ylim=c(0,2),type="n",xaxt="n",xlab="",yaxt="n",ylab="")
 text(1,1,"Caution: Even long MCMC chains \nproduce unstable estimates of SD")
-savePlot( file=paste(fileNameRoot,"SDmode",sep="") , type="eps" )
-savePlot( file=paste(fileNameRoot,"SDmode",sep="") , type="jpg" )
-windows()
+saveGraph( file=paste(fileNameRoot,"SDmode",sep="") , type="eps" )
+saveGraph( file=paste(fileNameRoot,"SDmode",sep="") , type="jpg" )
+openGraph()
 layout( matrix(c(1:6),nrow=2,byrow=T) )
 par( mar=c(3,1,2.5,0) , mgp=c(2,0.7,0) )
 histInfo = plotPost( aSD , xlab="aSD" , main=paste(aName,"SD") , 
@@ -320,12 +318,12 @@ histInfo = plotPost( sSD , xlab="sSD" , main=paste(sName,"[within",aName,"] SD")
                       col="skyblue" , showMode=F )
 plot(-1,-1,xlim=c(0,2),ylim=c(0,2),type="n",xaxt="n",xlab="",yaxt="n",ylab="")
 text(1,1,"Caution: Even long MCMC chains \nproduce unstable estimates of SD")
-savePlot( file=paste(fileNameRoot,"SDmean",sep="") , type="eps" )
-savePlot( file=paste(fileNameRoot,"SDmean",sep="") , type="jpg" )
+saveGraph( file=paste(fileNameRoot,"SDmean",sep="") , type="eps" )
+saveGraph( file=paste(fileNameRoot,"SDmean",sep="") , type="jpg" )
 
 
 # Display a, b, axb values:
-windows((NaLvl+1)*2.75,(NbLvl+1)*2.0)
+openGraph((NaLvl+1)*2.75,(NbLvl+1)*2.0)
 layoutMat = matrix( 0 , nrow=(NaLvl+1) , ncol=(NbLvl+1) )
 layoutMat[1,1] = 1 # base
 lastCellIdx = layoutMat[1,1]
@@ -359,15 +357,15 @@ for ( k in 1:NbLvl ) {
                           col=axbColor , xlim=xLim )
   }
 }
-savePlot( file=paste(fileNameRoot,"ab",sep="") , type="eps" )
-savePlot( file=paste(fileNameRoot,"ab",sep="") , type="jpg" )
+saveGraph( file=paste(fileNameRoot,"ab",sep="") , type="eps" )
+saveGraph( file=paste(fileNameRoot,"ab",sep="") , type="jpg" )
 
 # Display s values:
 for ( aIdx in 1:NaLvl ) {
   sIdxVec = (1:NsLvl)[aLvlOFsLvl == aIdx]
   nCols = 5
   nRows = ceiling(length(sIdxVec)/nCols)
-  windows(height=nRows*1.75,width=nCols*2.0)
+  openGraph(height=nRows*1.75,width=nCols*2.0)
   layout( matrix( 1:(nRows*nCols) , nrow=nRows , ncol=nCols ) )
   par( mar=c(4,0.5,2.5,0.5) , mgp=c(2,0.7,0) )
   for ( sIdx in sIdxVec ) {
@@ -376,8 +374,8 @@ for ( aIdx in 1:NaLvl ) {
                          main="Subj within A" ,
                          col="skyblue"  )
   }
-  savePlot( file=paste(fileNameRoot,"swa",aIdx,sep="") , type="eps" )
-  savePlot( file=paste(fileNameRoot,"swa",aIdx,sep="") , type="jpg" )
+  saveGraph( file=paste(fileNameRoot,"swa",aIdx,sep="") , type="eps" )
+  saveGraph( file=paste(fileNameRoot,"swa",aIdx,sep="") , type="jpg" )
 }
 
 # Display contrast analyses
@@ -386,7 +384,7 @@ if ( nContrasts > 0 ) {
    nPlotPerRow = 5
    nPlotRow = ceiling(nContrasts/nPlotPerRow)
    nPlotCol = ceiling(nContrasts/nPlotRow)
-   windows(3.75*nPlotCol,2.5*nPlotRow)
+   openGraph(3.75*nPlotCol,2.5*nPlotRow)
    layout( matrix(1:(nPlotRow*nPlotCol),nrow=nPlotRow,ncol=nPlotCol,byrow=T) )
    par( mar=c(4,0.5,2.5,0.5) , mgp=c(2,0.7,0) )
    for ( cIdx in 1:nContrasts ) {
@@ -399,8 +397,8 @@ if ( nContrasts > 0 ) {
                 main=paste( "A Contrast:", names(aContrastList)[cIdx] ) ,
                             col=aColor )
    }
-   savePlot( file=paste(fileNameRoot,"aContrasts",sep="") , type="eps" )
-   savePlot( file=paste(fileNameRoot,"aContrasts",sep="") , type="jpg" )
+   saveGraph( file=paste(fileNameRoot,"aContrasts",sep="") , type="eps" )
+   saveGraph( file=paste(fileNameRoot,"aContrasts",sep="") , type="jpg" )
 }
 #
 nContrasts = length( bContrastList )
@@ -408,7 +406,7 @@ if ( nContrasts > 0 ) {
    nPlotPerRow = 5
    nPlotRow = ceiling(nContrasts/nPlotPerRow)
    nPlotCol = ceiling(nContrasts/nPlotRow)
-   windows(3.75*nPlotCol,2.5*nPlotRow)
+   openGraph(3.75*nPlotCol,2.5*nPlotRow)
    layout( matrix(1:(nPlotRow*nPlotCol),nrow=nPlotRow,ncol=nPlotCol,byrow=T) )
    par( mar=c(4,0.5,2.5,0.5) , mgp=c(2,0.7,0) )
    for ( cIdx in 1:nContrasts ) {
@@ -421,8 +419,8 @@ if ( nContrasts > 0 ) {
                 main=paste( "B Contrast:", names(bContrastList)[cIdx] ) ,
                             col=bColor )
    }
-   savePlot( file=paste(fileNameRoot,"bContrasts",sep="") , type="eps" )
-   savePlot( file=paste(fileNameRoot,"bContrasts",sep="") , type="jpg" )
+   saveGraph( file=paste(fileNameRoot,"bContrasts",sep="") , type="eps" )
+   saveGraph( file=paste(fileNameRoot,"bContrasts",sep="") , type="jpg" )
 }
 #
 nContrasts = length( axbContrastList )
@@ -430,7 +428,7 @@ if ( nContrasts > 0 ) {
    nPlotPerRow = 5
    nPlotRow = ceiling(nContrasts/nPlotPerRow)
    nPlotCol = ceiling(nContrasts/nPlotRow)
-   windows(3.75*nPlotCol,2.5*nPlotRow)
+   openGraph(3.75*nPlotCol,2.5*nPlotRow)
    layout( matrix(1:(nPlotRow*nPlotCol),nrow=nPlotRow,ncol=nPlotCol,byrow=T) )
    par( mar=c(4,0.5,2.5,0.5) , mgp=c(2,0.7,0) )
    for ( cIdx in 1:nContrasts ) {
@@ -451,8 +449,8 @@ if ( nContrasts > 0 ) {
                  compVal=0 ,  xlab=contrastLab , cex.lab = 0.75 ,
                  main=paste( names(axbContrastList)[cIdx] ) , col=axbColor )
    }
-   savePlot( file=paste(fileNameRoot,"axbContrasts",sep="") , type="eps" )
-   savePlot( file=paste(fileNameRoot,"axbContrasts",sep="") , type="jpg" )
+   saveGraph( file=paste(fileNameRoot,"axbContrasts",sep="") , type="eps" )
+   saveGraph( file=paste(fileNameRoot,"axbContrasts",sep="") , type="jpg" )
 }
 #
 nContrasts = length( simpleContrastList )
@@ -460,7 +458,7 @@ if ( nContrasts > 0 ) {
    nPlotPerRow = 5
    nPlotRow = ceiling(nContrasts/nPlotPerRow)
    nPlotCol = ceiling(nContrasts/nPlotRow)
-   windows(3.75*nPlotCol,2.5*nPlotRow)
+   openGraph(3.75*nPlotCol,2.5*nPlotRow)
    layout( matrix(1:(nPlotRow*nPlotCol),nrow=nPlotRow,ncol=nPlotCol,byrow=T) )
    par( mar=c(4,0.5,2.5,0.5) , mgp=c(2,0.7,0) )
    for ( cIdx in 1:nContrasts ) {
@@ -481,8 +479,8 @@ if ( nContrasts > 0 ) {
                  compVal=0 ,  xlab=contrastLab , cex.lab = 0.75 ,
                  main=paste( names(simpleContrastList)[cIdx] ) , col=axbColor )
    }
-   savePlot( file=paste(fileNameRoot,"simpleContrasts",sep="") , type="eps" )
-   savePlot( file=paste(fileNameRoot,"simpleContrasts",sep="") , type="jpg" )
+   saveGraph( file=paste(fileNameRoot,"simpleContrasts",sep="") , type="eps" )
+   saveGraph( file=paste(fileNameRoot,"simpleContrasts",sep="") , type="jpg" )
 }
 
 #==============================================================================

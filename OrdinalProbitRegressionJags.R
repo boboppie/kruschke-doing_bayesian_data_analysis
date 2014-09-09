@@ -1,9 +1,7 @@
 graphics.off()
 rm(list=ls(all=TRUE))
 fileNameRoot="OrdinalProbitRegressionJags" # for constructing output filenames
-if ( .Platform$OS.type != "windows" ) { 
-  windows <- function( ... ) X11( ... ) 
-}
+source("openGraphSaveGraph.R")
 require(rjags)         # Kruschke, J. K. (2011). Doing Bayesian Data Analysis:
                        # A Tutorial with R and BUGS. Academic Press / Elsevier.
 #------------------------------------------------------------------------------
@@ -142,9 +140,9 @@ codaSamples = coda.samples( jagsModel , variable.names=parameters ,
 checkConvergence = F
 if ( checkConvergence ) {
   show( summary( codaSamples ) )
-  windows()
+  openGraph()
   plot( codaSamples , ask=F )  
-  windows()
+  openGraph()
   autocorr.plot( codaSamples , ask=F )
 }
 
@@ -180,23 +178,23 @@ source("plotPost.R")
 
 # Scatter plots of parameter values, pairwise:
 if ( (nPredictors+nYlevels) <= 10 ) { # don't display if too many
-    windows()
+    openGraph()
     thinIdx = ceiling(seq(1,chainLength,length=200))
     pairs( cbind( zbSamp[thinIdx,] , zthreshSamp[thinIdx,] )  ,
            labels=c( paste("zb",predictorNames,sep="") ,
                      paste("zthresh",1:nYlevels,sep="")) )
-    windows()
+    openGraph()
     pairs( cbind( bSamp[thinIdx,] , threshSamp[thinIdx,] )  ,
            labels=c( paste("b",predictorNames,sep="") ,
                      paste("thresh",1:nYlevels,sep="")) )
-    savePlot(file=paste(fileNameRoot,"PostPairs.eps",sep=""),type="eps")
+    saveGraph(file=paste(fileNameRoot,"PostPairs.eps",sep=""),type="eps")
 }
 
 # Display the posterior:
 nPlotPerRow = 5
 nPlotRow = ceiling((nPredictors+nYlevels-1)/nPlotPerRow)
 nPlotCol = ceiling((nPredictors+nYlevels-1)/nPlotRow)
-windows(3.5*nPlotCol,2.25*nPlotRow)
+openGraph(3.5*nPlotCol,2.25*nPlotRow)
 layout( matrix(1:(nPlotRow*nPlotCol),nrow=nPlotRow,ncol=nPlotCol,byrow=T) )
 par( mar=c(4,3,2.5,0) , mgp=c(2,0.7,0) )
 for ( sIdx in 1:nPredictors ) {
@@ -211,11 +209,11 @@ histInfo = plotPost( threshSamp[,sIdx] , xlab="Thresh Value" , compVal=NULL ,
                      main=bquote( theta * .(sIdx) ) ,
                      cex.main=1.67 , cex.lab=1.33 )
 }
-savePlot(file=paste(fileNameRoot,"PostHist.eps",sep=""),type="eps")
+saveGraph(file=paste(fileNameRoot,"PostHist.eps",sep=""),type="eps")
 
 # Plot the data
 if ( nPredictors == 2 ) {
-windows()
+openGraph()
 plot( x[,1] , x[,2] , xlab=colnames(x)[1] , ylab=colnames(x)[2] ,
       main=paste( "The Data (" , dataSource , ")" , sep="") ,
       pch=as.character(y) )
@@ -226,7 +224,7 @@ for ( chainIdx in round(seq(1,chainLength,len=3)) ) {
             lwd = 2 , lty=chainIdx , col="grey" )
   }
 }
-savePlot(file=paste(fileNameRoot,"Data.eps",sep=""),type="eps")
+saveGraph(file=paste(fileNameRoot,"Data.eps",sep=""),type="eps")
 
 } # end if nPredictors == 2
 

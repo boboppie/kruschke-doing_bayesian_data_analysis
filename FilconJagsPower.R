@@ -1,8 +1,6 @@
 graphics.off()
 rm(list=ls(all=TRUE))
-if ( .Platform$OS.type != "windows" ) { 
-  windows <- function( ... ) X11( ... ) 
-}
+source("openGraphSaveGraph.R")
 require(rjags)         # Kruschke, J. K. (2011). Doing Bayesian Data Analysis:
                        # A Tutorial with R and BUGS. Academic Press / Elsevier.
 
@@ -97,7 +95,7 @@ chainLength = NCOL(mu)
 # Display results if desired:
 if ( plotResults ) {
   # Histograms of condition (i.e. group) mu differences:
-  windows(12,4)
+  openGraph(12,4)
   layout( matrix(1:3,nrow=1) )
   source("plotPost.R")
   histInfo = plotPost( mu[1,]-mu[2,] , xlab=expression(mu[1]-mu[2]) ,
@@ -111,10 +109,10 @@ if ( plotResults ) {
   histInfo = plotPost( (mu[1,]+mu[2,])/2 - (mu[3,]+mu[4,])/2 , compVal=0.0 ,
                        xlab=expression((mu[1]+mu[2])/2 - (mu[3]+mu[4])/2) ,
                        breaks=30 , main="" )
-  savePlot( file = paste( fileNameRoot,"N",nSubjPerCond,"_",expIdx,".eps" ,
+  saveGraph( file = paste( fileNameRoot,"N",nSubjPerCond,"_",expIdx,".eps" ,
                               sep="" ) , type="eps" )
   # Scatterplot of mu, kappa:
-  windows()
+  openGraph()
   muLim = c(.60,1) ; kappaLim = c( 2.0 , 50 ) ; mainLab="Posterior"
   thindex = round( seq( 1 , chainLength , len=300 ) )
   plot( mu[1,thindex] , kappa[1,thindex] , main=mainLab ,

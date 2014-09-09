@@ -201,7 +201,9 @@ plot( theta2, posteriorTheta2Marg ,type="l"
 plot( c(0,1),c(0,1) ,type="n" ,bty="n" ,xaxt="n" ,yaxt="n" ,xlab="" ,ylab="" )
 text( 0,1,"Posterior",adj=c(0,1),cex=1.5)
 
-want_eps_file = TRUE
+want_eps_file = FALSE
+# To save graphs, please see update at
+# http://doingbayesiandataanalysis.blogspot.com/2013/01/uniform-r-code-for-opening-saving.html
 if ( want_eps_file ) {
 	epsfilename = paste( "BinomHierTwoCoins" 
 		,"_",bquote(.(n))

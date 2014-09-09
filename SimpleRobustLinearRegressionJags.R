@@ -1,9 +1,8 @@
 graphics.off()
 rm(list=ls(all=TRUE))
 fileNameRoot="SimpleRobustLinearRegressionJags" # for constructing output filenames
-if ( .Platform$OS.type != "windows" ) { 
-  windows <- function( ... ) X11( ... ) 
-}
+source("openGraphSaveGraph.R")
+source("plotPost.R")
 require(rjags)         # Kruschke, J. K. (2011). Doing Bayesian Data Analysis:
                        # A Tutorial with R and BUGS. Academic Press / Elsevier.
 #------------------------------------------------------------------------------
@@ -87,13 +86,13 @@ codaSamples = coda.samples( jagsModel , variable.names=parameters ,
 #------------------------------------------------------------------------------
 # EXAMINE THE RESULTS
 
-checkConvergence = F
+checkConvergence = FALSE
 if ( checkConvergence ) {
-  show( summary( codaSamples ) )
-  windows()
-  plot( codaSamples , ask=F )  
-  windows()
-  autocorr.plot( codaSamples , ask=F )
+  openGraph(width=7,height=7)
+  autocorr.plot( codaSamples[[1]] , ask=FALSE ) 
+  show( gelman.diag( codaSamples ) )
+  effectiveChainLength = effectiveSize( codaSamples ) 
+  show( effectiveChainLength )
 }
 
 # Convert coda-object codaSamples to matrix object for easier handling.
@@ -175,30 +174,28 @@ for ( xIdx in 1:length(xPostPred) ) {
 }
 
 # Display believable beta0 and b1 values
-windows()
+openGraph()
 par( mar=c(4,4,1,1)+0.1 , mgp=c(2.5,0.8,0) )
 #layout( matrix(1:2,nrow=1) )
 thinIdx = seq(1,length(b0),length=700)
 #plot( z1[thinIdx] , z0[thinIdx] , cex.lab=1.75 ,
 #      ylab="Standardized Intercept" , xlab="Standardized Slope" )
 plot( b1[thinIdx] , b0[thinIdx] , cex.lab=1.75 ,
-      ylab="Intercept" , xlab="Slope" )
-savePlot(file=paste(fileNameRoot,"SlopeIntercept.eps",sep=""),type="eps")
+      ylab="Intercept" , xlab="Slope" , col="skyblue" )
+saveGraph(file=paste(fileNameRoot,"SlopeIntercept",sep=""),type="eps")
 
 # Display the posterior of the b1:
-source("plotPost.R")
-windows(7,4)
+openGraph(7,4)
 par( mar=c(4,4,1,1)+0.1 , mgp=c(2.5,0.8,0) )
 #layout( matrix(1:2,nrow=1) )
-#histInfo = plotPost( z1 , xlab="Standardized slope" , compVal=0.0 ,
-#                     breaks=30  )
+#histInfo = plotPost( z1 , xlab="Standardized slope" , compVal=0.0 )
 histInfo = plotPost( b1 , main=bquote("Mean tdf"==.(signif(tdfM,3))) , cex.main=2 ,
                      xlab=bquote("Slope (" * Delta * .(yName) / Delta * .(xName)
-                                        * ")") , compVal=0.0 , breaks=30  )
-savePlot(file=paste(fileNameRoot,"PostSlope.eps",sep=""),type="eps")
+                                        * ")") , compVal=0.0 )
+saveGraph(file=paste(fileNameRoot,"PostSlope",sep=""),type="eps")
 
 # Display data with believable regression lines and posterior predictions.
-windows()
+openGraph()
 par( mar=c(3,3,2,1)+0.5 , mgp=c(2.1,0.8,0) )
 # Plot data values:
 plot( x , y , cex=1.5 , lwd=2 , col="black" , xlim=xLim , ylim=yLim ,
@@ -208,10 +205,10 @@ plot( x , y , cex=1.5 , lwd=2 , col="black" , xlim=xLim , ylim=yLim ,
 for ( i in seq(from=1,to=length(b0),length=50) ) {
     abline( b0[i] , b1[i] , col="skyblue" )
 }
-savePlot(file=paste(fileNameRoot,"DataLines.eps",sep=""),type="eps")
+saveGraph(file=paste(fileNameRoot,"DataLines",sep=""),type="eps")
 
 # Display data with HDIs of posterior predictions.
-windows()
+openGraph()
 par( mar=c(3,3,2,1)+0.5 , mgp=c(2.1,0.8,0) )
 # Plot data values:
 #yLim= c( min(c(yHDIlim,y)) , max(c(yHDIlim,y)) )
@@ -221,6 +218,6 @@ plot( x , y , cex=1.5 , lwd=2 , col="black" , xlim=xLim , ylim=yLim ,
 # Superimpose posterior predicted 95% HDIs:
 segments( xPostPred, yHDIlim[,1] , xPostPred, yHDIlim[,2] , lwd=3, col="skyblue" )
 points( xPostPred , apply(yPostPred,1,median) , pch="+" , cex=2 , col="skyblue" )
-savePlot(file=paste(fileNameRoot,"DataPred.eps",sep=""),type="eps")
+saveGraph(file=paste(fileNameRoot,"DataPred",sep=""),type="eps")
 
 #------------------------------------------------------------------------------

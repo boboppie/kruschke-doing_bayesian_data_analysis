@@ -1,9 +1,7 @@
 graphics.off()
 rm(list=ls(all=TRUE))
 fileNameRoot="FilconModelCompJags" # for constructing output filenames
-if ( .Platform$OS.type != "windows" ) { 
-  windows <- function( ... ) X11( ... ) 
-}
+source("openGraphSaveGraph.R")
 require(rjags)         # Kruschke, J. K. (2011). Doing Bayesian Data Analysis:
                        # A Tutorial with R and BUGS. Academic Press / Elsevier.
 #------------------------------------------------------------------------------
@@ -87,24 +85,24 @@ pM1 = sum( modelIdxSample == 1 ) / length( modelIdxSample )
 pM2 = 1 - pM1
 string1 =paste("p(M1|D)=",round(pM1,3),sep="")
 string2 =paste("p(M2|D)=",round(pM2,3),sep="")
-windows(10,4)
+openGraph(10,4)
 plot( 1:length(modelIdxSample) , modelIdxSample , type="l" ,
       xlab="Step in Markov chain" , ylab="Model Index (1, 2)" ,
       main=paste(string1,", ",string2,sep="") )
-savePlot(file=paste(fileNameRoot,"_mdlIdx",".eps",sep="") , type="eps")
+saveGraph(file=paste(fileNameRoot,"_mdlIdx",".eps",sep="") , type="eps")
 
 thetaSampleM1 = mcmcChain[, "theta" ][ modelIdxSample == 1 ]
 thetaSampleM2 = mcmcChain[, "theta" ][ modelIdxSample == 2 ]
 source("plotPost.R")
-windows()
+openGraph()
 layout( matrix(1:2,nrow=2) )
 h1 = plotPost( thetaSampleM1 , main="Post. theta for M1" , breaks=21 )
 h2 = plotPost( thetaSampleM2 , main="Post. theta for M2" , breaks=21 )
-savePlot(file=paste(fileNameRoot,"_theta",".eps",sep="") , type="eps")
+saveGraph(file=paste(fileNameRoot,"_theta",".eps",sep="") , type="eps")
 
 nuSampleM1 = mcmcChain[, "nu" ][ modelIdxSample == 1 ]
 etaSampleM2 = mcmcChain[, "eta" ][ modelIdxSample == 2 ]
-windows()
+openGraph()
 layout( matrix(1:2,nrow=2) )
 h1 = plotPost( nuSampleM1 ,
                main=bquote("p("*nu*"|D,M1), with p(M1|D)="*.(round(pM1,3))) ,
@@ -112,4 +110,4 @@ h1 = plotPost( nuSampleM1 ,
 h2 = plotPost( etaSampleM2 ,
                main=bquote("p("*eta*"|D,M2), with p(M2|D)="*.(round(pM2,3))) ,
                breaks=seq(0,50,.25) , xlab=expression(eta) , xlim=c(0,7) )
-savePlot(file=paste(fileNameRoot,"_nu_eta",".eps",sep="") , type="eps")
+saveGraph(file=paste(fileNameRoot,"_nu_eta",".eps",sep="") , type="eps")

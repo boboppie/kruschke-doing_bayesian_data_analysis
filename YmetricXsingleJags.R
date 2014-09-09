@@ -1,9 +1,8 @@
 graphics.off()
 rm(list=ls(all=TRUE))
 fileNameRoot="YmetricXsingleJags" # for constructing output filenames
-if ( .Platform$OS.type != "windows" ) { 
-  windows <- function( ... ) X11( ... ) 
-}
+source("openGraphSaveGraph.R")
+source("plotPost.R")
 require(rjags)         # Kruschke, J. K. (2011). Doing Bayesian Data Analysis:
                        # A Tutorial with R and BUGS. Academic Press / Elsevier.
 #------------------------------------------------------------------------------
@@ -44,7 +43,7 @@ initsList = list( mu = mean( dataList$y ) , tau = 1 / sd( dataList$y )^2 )
 # RUN THE CHAINS
 
 parameters = c("mu" , "tau")  # The parameter(s) to be monitored.
-adaptSteps = 500              # Number of steps to "tune" the samplers.
+adaptSteps = 1000              # Number of steps to "tune" the samplers.
 burnInSteps = 1000            # Number of steps to "burn-in" the samplers.
 nChains = 3                   # Number of chains to run.
 numSavedSteps=50000           # Total number of steps in chains to save.
@@ -66,13 +65,13 @@ codaSamples = coda.samples( jagsModel , variable.names=parameters ,
 #------------------------------------------------------------------------------
 # EXAMINE THE RESULTS
 
-checkConvergence = T
+checkConvergence = FALSE
 if ( checkConvergence ) {
-  show( summary( codaSamples ) )
-  windows()
-  plot( codaSamples , ask=F )  
-  windows()
-  autocorr.plot( codaSamples , ask=F )
+  openGraph(width=7,height=7)
+  autocorr.plot( codaSamples[[1]] , ask=FALSE )
+  show( gelman.diag( codaSamples ) )
+  effectiveChainLength = effectiveSize( codaSamples ) 
+  show( effectiveChainLength )
 }
 
 # Convert coda-object codaSamples to matrix object for easier handling.
@@ -84,20 +83,43 @@ muSample = mcmcChain[, "mu" ]
 tauSample = mcmcChain[, "tau" ]
 sigmaSample <- 1 / sqrt( tauSample ) # Convert precision to SD
 
-source("plotPost.R")
-windows()
-plotPost( muSample , xlab="mu" , breaks=30 , main="Posterior" )
-savePlot(file=paste(fileNameRoot,"PostMu.eps",sep=""),type="eps")
+# specify preferred graph-file type:
+graphType="eps" # or "jpg" or whatever you want
 
+# Marginal distributions of mu and sigma:
+openGraph(width=7,height=3.5)
+layout(matrix(1:2,nrow=1))
+plotPost( muSample , xlab=bquote(mu) )
+plotPost( sigmaSample , xlab=bquote(sigma) , showMode=TRUE )
+saveGraph(file=paste(fileNameRoot,"PostMuSigmaMarg",sep=""),type=graphType)
+
+# Joint distribution of mu and sigma:
 nPts = length(muSample) ; nPtsForDisplay = min( nPts , 2000 )
 thinIdx = seq( 1 , nPts , nPts / nPtsForDisplay )
-windows()
-plot( muSample[thinIdx] , sigmaSample[thinIdx] , col="gray" ,
-      xlab="mu" , ylab="sigma" , cex.lab=1.5 , main="Posterior" , log="y" )
+openGraph(width=5,height=5)
+plot( muSample[thinIdx] , sigmaSample[thinIdx] , col="skyblue" ,
+      xlab=bquote(mu) , ylab=bquote(sigma) , cex.lab=1.5 )
 points( mean(muSample) , mean(sigmaSample) , pch="+" , cex=2 )
 text( mean(muSample) , mean(sigmaSample) ,
       bquote( .(round(mean(muSample),1)) *"  "* .(round(mean(sigmaSample),1)) ),
       adj=c(.5,-0.5) )
-savePlot(file=paste(fileNameRoot,"PostMuSigma.eps",sep=""),type="eps")
+saveGraph(file=paste(fileNameRoot,"PostMuSigmaJoint",sep=""),type=graphType)
+
+# Posterior predictive check:
+openGraph(width=5,height=4)
+histInfo = hist( y , xlab="y (data)" , 
+                 main="Data with Posterior Pred. Distrib." , 
+                 breaks=20 , col="grey" , border="white" , prob=TRUE )
+yLim = range( histInfo$breaks )
+yComb = seq( yLim[1] , yLim[2] , length=501 )
+chainLength = length(muSample)
+chainIdxVec = floor( seq(1,chainLength,length=20) )
+for ( i in chainIdxVec ) {
+  lines( yComb , dnorm( yComb , mean=muSample[i] , sd=sigmaSample[i] ) ,
+         col="skyblue" )
+}
+saveGraph(file=paste(fileNameRoot,"PostPredict",sep=""),type=graphType)
+
+
 
 #------------------------------------------------------------------------------

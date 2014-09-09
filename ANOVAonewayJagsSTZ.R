@@ -1,9 +1,8 @@
 graphics.off()
 rm(list=ls(all=TRUE))
+source("openGraphSaveGraph.R")
+source("plotPost.R")
 fileNameRoot="ANOVAonewayJagsSTZ" # for constructing output filenames
-if ( .Platform$OS.type != "windows" ) { 
-  windows <- function( ... ) X11( ... ) 
-}
 require(rjags)         # Kruschke, J. K. (2011). Doing Bayesian Data Analysis:
                        # A Tutorial with R and BUGS. Academic Press / Elsevier.
 #------------------------------------------------------------------------------
@@ -36,7 +35,7 @@ writeLines(modelstring,con="model.txt")
 # THE DATA.
 
 # Specify data source:
-dataSource = c( "McDonaldSK1991" , "SolariLS2008" , "Random" )[1]
+dataSource = c( "McDonaldSK1991" , "SolariLS2008" , "Random" , "Nonhomogvar" )[1]
 # Load the data:
 
 if ( dataSource == "McDonaldSK1991" ) {
@@ -116,6 +115,25 @@ if ( dataSource == "Random" ) {
   }
 }
 
+if ( dataSource == "Nonhomogvar" ) {
+  fileNameRoot = paste( fileNameRoot , dataSource , sep="" )
+  datarecord = read.csv( "NonhomogVarData.csv" )
+  y = datarecord$Y
+  Ntotal = length(y)
+  x = as.numeric(datarecord$Group)
+  xnames = levels(datarecord$Group)
+  NxLvl = length(levels(datarecord$Group))
+  normalize = function( v ){ return( v / sum(v) ) }
+  contrastList = list( 
+    BvA = (xnames=="B")-(xnames=="A") ,
+    CvA = (xnames=="C")-(xnames=="A") ,
+    DvA = (xnames=="D")-(xnames=="A") , # !
+    CvB = (xnames=="C")-(xnames=="B") , # !
+    DvB = (xnames=="D")-(xnames=="B") ,
+    DvC = (xnames=="D")-(xnames=="C") 
+  )
+}
+
 # Specify the data in a form that is compatible with BRugs model, as a list:
 ySDorig = sd(y)
 yMorig = mean(y)
@@ -142,8 +160,8 @@ initsList = list( a0 = a0 , a = a , sigma = sp , aSD = sd(a) )
 # RUN THE CHAINS
 
 parameters = c( "a0" ,  "a" , "b0" , "b" , "sigma" , "aSD" )  
-adaptSteps = 500              # Number of steps to "tune" the samplers.
-burnInSteps = 1000            # Number of steps to "burn-in" the samplers.
+adaptSteps = 1000              # Number of steps to "tune" the samplers.
+burnInSteps = 5000            # Number of steps to "burn-in" the samplers.
 nChains = 3                   # Number of chains to run.
 numSavedSteps=100000           # Total number of steps in chains to save.
 thinSteps=1                   # Number of steps to "thin" (1=keep every step).
@@ -166,12 +184,11 @@ codaSamples = coda.samples( jagsModel , variable.names=parameters ,
 
 checkConvergence = FALSE
 if ( checkConvergence ) {
-  #show( summary( codaSamples ) )
-  #windows()
-  #plot( codaSamples , ask=F )  
-  windows()
+  openGraph(width=7,height=7)
   autocorr.plot( codaSamples[[1]][,c("sigma","aSD")] )
-
+  show( gelman.diag( codaSamples ) )
+  effectiveChainLength = effectiveSize( codaSamples ) 
+  show( effectiveChainLength )
 }
 
 # Convert coda-object codaSamples to matrix object for easier handling.
@@ -193,16 +210,15 @@ for ( xidx in 1:dataList$NxLvl ) {
 b0Sample = b0Sample * ySDorig + yMorig
 bSample = bSample * ySDorig
 
-source("plotPost.R")
 # plot the SDs:
-windows()
+openGraph(width=7,height=7)
 layout( matrix(1:2,nrow=2) )
 par( mar=c(3,1,2.5,0) , mgp=c(2,0.7,0) )
 histInfo = plotPost( sigmaSample , xlab="sigma" , main="Cell SD" , showMode=T )
 histInfo = plotPost( aSDSample , xlab="aSD" , main="a SD" , showMode=T )
-#savePlot( file=paste(fileNameRoot,"SD",sep="") , type="eps" )
+#saveGraph( file=paste(fileNameRoot,"SD",sep="") , type="eps" )
 # Plot b values:
-windows(dataList$NxLvl*2.75,2.5)
+openGraph(dataList$NxLvl*2.75,2.5)
 layout( matrix( 1:dataList$NxLvl , nrow=1 ) )
 par( mar=c(3,1,2.5,0) , mgp=c(2,0.7,0) )
 for ( xidx in 1:dataList$NxLvl ) {
@@ -210,7 +226,7 @@ for ( xidx in 1:dataList$NxLvl ) {
               xlab=bquote(beta*1[.(xidx)]) ,
               main=paste("x:",xnames[xidx])  )
 }
-#savePlot( file=paste(fileNameRoot,"b",sep="") , type="eps" )
+#saveGraph( file=paste(fileNameRoot,"b",sep="") , type="eps" )
 
 # Display contrast analyses
 nContrasts = length( contrastList )
@@ -218,7 +234,7 @@ if ( nContrasts > 0 ) {
    nPlotPerRow = 5
    nPlotRow = ceiling(nContrasts/nPlotPerRow)
    nPlotCol = ceiling(nContrasts/nPlotRow)
-   windows(3.75*nPlotCol,2.5*nPlotRow)
+   openGraph(3.75*nPlotCol,2.5*nPlotRow)
    layout( matrix(1:(nPlotRow*nPlotCol),nrow=nPlotRow,ncol=nPlotCol,byrow=T) )
    par( mar=c(4,0.5,2.5,0.5) , mgp=c(2,0.7,0) )
    for ( cIdx in 1:nContrasts ) {
@@ -230,8 +246,34 @@ if ( nContrasts > 0 ) {
                 cex.lab = 1.0 ,
                 main=paste( "X Contrast:", names(contrastList)[cIdx] ) )
    }
-   #savePlot( file=paste(fileNameRoot,"xContrasts",sep="") , type="eps" )
+   #saveGraph( file=paste(fileNameRoot,"xContrasts",sep="") , type="eps" )
 }
+
+# Display data with posterior predictive distributions
+openGraph(width=1.5*NxLvl,height=5)
+plot(0,0, 
+     xlim=c(0.2,NxLvl+0.1) , xlab="X" , 
+     xaxt="n" ,
+     ylim=c(min(y)-0.2*(max(y)-min(y)),max(y)+0.2*(max(y)-min(y))) , ylab="Y" ,
+     main="Data with Posterior Predictive Distrib.")
+axis( 1 , at=1:NxLvl , lab=xnames )
+for ( j in 1:NxLvl ) {
+  yVals = y[x==j]
+  points( rep(j,length(yVals))+runif(length(yVals),-0.03,0.03) , 
+          yVals , pch=20 , cex=1.5 , col="red" )
+  chainSub = round(seq(1,chainLength,length=20))
+  for ( chnIdx in chainSub ) {
+    m = b0Sample[chnIdx] + bSample[j,chnIdx]
+    s = sigmaSample[chnIdx]
+    yl = m-1.96*s
+    yh = m+1.96*s
+    ycomb=seq(yl,yh,length=201)
+    ynorm = dnorm(ycomb,mean=m,sd=s)
+    ynorm = 0.75*ynorm/max(ynorm)
+    lines( j-ynorm , ycomb , col="skyblue" ) # col=chnIdx )
+  }
+}
+#saveGraph(file=paste(fileNameRoot,"PostPred",sep=""),type="eps")
 
 #==============================================================================
 # Do NHST ANOVA and t tests:
@@ -242,11 +284,11 @@ cat("\n------------------------------------------------------------------\n\n")
 print( summary( aovresult ) )
 cat("\n------------------------------------------------------------------\n\n")
 print( model.tables( aovresult , "means" ) , digits=4 )
-windows()
-boxplot( y ~ x , data = theData )
+openGraph(width=7,height=7)
+boxplot( y ~ x , data = theData , cex.axis=1.25 , ylab="Y")
 cat("\n------------------------------------------------------------------\n\n")
 print( TukeyHSD( aovresult , "x" , ordered = FALSE ) )
-windows()
+openGraph(width=7,height=7)
 plot( TukeyHSD( aovresult , "x" ) )
 if ( T ) {
   for ( xIdx1 in 1:(NxLvl-1) ) {

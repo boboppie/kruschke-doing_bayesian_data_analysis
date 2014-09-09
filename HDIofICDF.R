@@ -20,4 +20,5 @@ HDIofICDF = function( ICDFname , credMass=0.95 , tol=1e-8 , ... ) {
    HDIlowTailPr = optInfo$minimum
    return( c( ICDFname( HDIlowTailPr , ... ) ,
 	            ICDFname( credMass + HDIlowTailPr , ... ) ) )
-}
+}                  # Kruschke, J. K. (2011). Doing Bayesian data analysis: A
+                   # Tutorial with R and BUGS. Elsevier Science/Academic Press.

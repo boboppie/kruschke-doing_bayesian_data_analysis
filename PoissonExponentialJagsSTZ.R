@@ -1,9 +1,7 @@
 graphics.off()
 rm(list=ls(all=TRUE))
 fileNameRoot="PoissonExponentialJagsSTZ" # for constructing output filenames
-if ( .Platform$OS.type != "windows" ) { 
-  windows <- function( ... ) X11( ... ) 
-}
+source("openGraphSaveGraph.R")
 require(rjags)         # Kruschke, J. K. (2011). Doing Bayesian Data Analysis:
                        # A Tutorial with R and BUGS. Academic Press / Elsevier.
 #------------------------------------------------------------------------------
@@ -179,9 +177,9 @@ codaSamples = coda.samples( jagsModel , variable.names=parameters ,
 checkConvergence = F
 if ( checkConvergence ) {
   show( summary( codaSamples ) )
-  windows()
+  openGraph()
   plot( codaSamples , ask=F )  
-  windows()
+  openGraph()
   autocorr.plot( codaSamples , ask=F )
 }
 
@@ -217,17 +215,17 @@ for ( x1idx in 1:dataList$Nx1Lvl ) {
 
 source("plotPost.R")
 
-windows(10,3)
+openGraph(10,3)
 layout( matrix(1:3,nrow=1) )
 par( mar=c(3,1,2.5,0) , mgp=c(2,0.7,0) )
 histInfo = plotPost( a1SDSample , xlab="a1SD" , main="a1 SD" , showMode=T )
 histInfo = plotPost( a2SDSample , xlab="a2SD" , main="a2 SD" , showMode=T )
 histInfo = plotPost( a1a2SDSample , xlab="a1a2SD" , main="Interaction SD" ,
                      showMode=T )
-#savePlot(file=paste(fileNameRoot,"SD",sep=""),type="eps")
+#saveGraph(file=paste(fileNameRoot,"SD",sep=""),type="eps")
 
 # Plot b values:
-windows((dataList$Nx1Lvl+1)*2.75,(dataList$Nx2Lvl+1)*2.25)
+openGraph((dataList$Nx1Lvl+1)*2.75,(dataList$Nx2Lvl+1)*2.25)
 layoutMat = matrix( 0 , nrow=(dataList$Nx2Lvl+1) , ncol=(dataList$Nx1Lvl+1) )
 layoutMat[1,1] = 1
 layoutMat[1,2:(dataList$Nx1Lvl+1)] = 1:dataList$Nx1Lvl + 1
@@ -255,7 +253,7 @@ for ( x2idx in 1:dataList$Nx2Lvl ) {
               main=paste("x1:",x1names[x1idx],", x2:",x2names[x2idx])  )
   }
 }
-#savePlot(file=paste(fileNameRoot,"b",sep=""),type="eps")
+#saveGraph(file=paste(fileNameRoot,"b",sep=""),type="eps")
 
 # Display contrast analyses
 nContrasts = length( x1contrastList )
@@ -263,7 +261,7 @@ if ( nContrasts > 0 ) {
    nPlotPerRow = 5
    nPlotRow = ceiling(nContrasts/nPlotPerRow)
    nPlotCol = ceiling(nContrasts/nPlotRow)
-   windows(3.75*nPlotCol,2.5*nPlotRow)
+   openGraph(3.75*nPlotCol,2.5*nPlotRow)
    layout( matrix(1:(nPlotRow*nPlotCol),nrow=nPlotRow,ncol=nPlotCol,byrow=T) )
    par( mar=c(4,0.5,2.5,0.5) , mgp=c(2,0.7,0) )
    for ( cIdx in 1:nContrasts ) {
@@ -275,7 +273,7 @@ if ( nContrasts > 0 ) {
                 cex.lab = 1.0 ,
                 main=paste( "X1 Contrast:", names(x1contrastList)[cIdx] ) )
    }
-   #savePlot(file=paste(fileNameRoot,"x1Contrasts",sep=""),type="eps")
+   #saveGraph(file=paste(fileNameRoot,"x1Contrasts",sep=""),type="eps")
 }
 #
 nContrasts = length( x2contrastList )
@@ -283,7 +281,7 @@ if ( nContrasts > 0 ) {
    nPlotPerRow = 5
    nPlotRow = ceiling(nContrasts/nPlotPerRow)
    nPlotCol = ceiling(nContrasts/nPlotRow)
-   windows(3.75*nPlotCol,2.5*nPlotRow)
+   openGraph(3.75*nPlotCol,2.5*nPlotRow)
    layout( matrix(1:(nPlotRow*nPlotCol),nrow=nPlotRow,ncol=nPlotCol,byrow=T) )
    par( mar=c(4,0.5,2.5,0.5) , mgp=c(2,0.7,0) )
    for ( cIdx in 1:nContrasts ) {
@@ -295,7 +293,7 @@ if ( nContrasts > 0 ) {
                 cex.lab = 1.0 ,
                 main=paste( "X2 Contrast:", names(x2contrastList)[cIdx] ) )
    }
-   #savePlot(file=paste(fileNameRoot,"x2Contrasts",sep=""),type="eps")
+   #saveGraph(file=paste(fileNameRoot,"x2Contrasts",sep=""),type="eps")
 }
 #
 nContrasts = length( x1x2contrastList )
@@ -303,7 +301,7 @@ if ( nContrasts > 0 ) {
    nPlotPerRow = 5
    nPlotRow = ceiling(nContrasts/nPlotPerRow)
    nPlotCol = ceiling(nContrasts/nPlotRow)
-   windows(3.75*nPlotCol,2.5*nPlotRow)
+   openGraph(3.75*nPlotCol,2.5*nPlotRow)
    layout( matrix(1:(nPlotRow*nPlotCol),nrow=nPlotRow,ncol=nPlotCol,byrow=T) )
    par( mar=c(4,0.5,2.5,0.5) , mgp=c(2,0.7,0) )
    for ( cIdx in 1:nContrasts ) {
@@ -324,7 +322,7 @@ if ( nContrasts > 0 ) {
                 compVal=0 , xlab=contrastLab , cex.lab = 0.75 ,
                 main=paste( names(x1x2contrastList)[cIdx] ) )
    }
-   #savePlot(file=paste(fileNameRoot,"x1x2Contrasts",sep=""),type="eps")
+   #saveGraph(file=paste(fileNameRoot,"x1x2Contrasts",sep=""),type="eps")
 }
 
 # Compute credible cell probability at each step in the MCMC chain
@@ -341,7 +339,7 @@ for ( chainIdx in 1:chainLength ) {
                           / sum( lambda12Sample[,,chainIdx] ) )
 }
 # Display credible cell probabilities
-windows((dataList$Nx1Lvl)*2.75,(dataList$Nx2Lvl)*2.25)
+openGraph((dataList$Nx1Lvl)*2.75,(dataList$Nx2Lvl)*2.25)
 layoutMat = matrix( 1:(dataList$Nx2Lvl*dataList$Nx1Lvl) ,
                     nrow=(dataList$Nx2Lvl) , ncol=(dataList$Nx1Lvl) , byrow=T )
 layout( layoutMat )
@@ -356,7 +354,7 @@ for ( x2idx in 1:dataList$Nx2Lvl ) {
                HDItextPlace=0.95 )
   }
 }
-#savePlot(file=paste(fileNameRoot,"CellP",sep=""),type="eps")
+#saveGraph(file=paste(fileNameRoot,"CellP",sep=""),type="eps")
 
 
 #==============================================================================

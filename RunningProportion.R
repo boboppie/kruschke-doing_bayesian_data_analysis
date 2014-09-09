@@ -27,5 +27,5 @@ displaystring = paste( "Flip Sequence = " , flipletters , "..." , sep="" )
 text( 5 , .9 , displaystring , adj=c(0,1) , cex=1.3 )
 # Display the relative frequency at the end of the sequence.
 text( N , .3 , paste("End Proportion =",runprop[N]) , adj=c(1,0) , cex=1.3 )
-# Save the plot to an EPS file.
-dev.copy2eps( file = "RunningProportion.eps" )
+# To save graphs, please see update at
+# http://doingbayesiandataanalysis.blogspot.com/2013/01/uniform-r-code-for-opening-saving.html

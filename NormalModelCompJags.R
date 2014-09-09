@@ -1,9 +1,7 @@
 graphics.off()
 rm(list=ls(all=TRUE))
 filenamebase = "NormalModelCompJags"
-if ( .Platform$OS.type != "windows" ) { 
-  windows <- function( ... ) X11( ... ) 
-}
+source("openGraphSaveGraph.R")
 require(rjags)         # Kruschke, J. K. (2011). Doing Bayesian Data Analysis:
                        # A Tutorial with R and BUGS. Academic Press / Elsevier.
 
@@ -115,7 +113,7 @@ sigma1Ch = mcmcChain[, "sigma" ][ mIdxCh == 1 ]
 sigma2Ch = mcmcChain[, "sigma" ][ mIdxCh == 2 ]
 sigmaRange = range( c(sigma1Ch,sigma2Ch) )
 
-windows(10,7)
+openGraph(10,7)
 layout( matrix( c(1,1,2,2, 3,4,4,4, 5,5,6,6 ) , nrow=4 ) , 
         heights=1+c(1,1,1,1) , widths=1+c(2,1,2)  )
 
@@ -157,8 +155,8 @@ hi = plotPost( mu2Ch , xlab=bquote(mu) , xlim=muRange ,
 hi = plotPost( sigma2Ch , xlab=bquote(sigma) , main="Model 2" , xlim=sigmaRange , 
               showMode=TRUE , cex.lab=1.75 )
 
-#savePlot(file=paste( filenamebase,dataType,M,altPriorSD,sep="") , type="eps" )
-#savePlot(file=paste( filenamebase,dataType,M,altPriorSD,sep="") , type="jpg" )
+#saveGraph(file=paste( filenamebase,dataType,M,altPriorSD,sep="") , type="eps" )
+#saveGraph(file=paste( filenamebase,dataType,M,altPriorSD,sep="") , type="jpg" )
 
 show( t.test(y) )
 # http://pcl.missouri.edu/bf-one-sample

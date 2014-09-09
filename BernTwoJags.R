@@ -1,7 +1,7 @@
 rm(list = ls())
 graphics.off()
 source("openGraphSaveGraph.R")
-
+source("plotPost.R")
 require(rjags)         # Kruschke, J. K. (2011). Doing Bayesian Data Analysis:
                        # A Tutorial with R and BUGS. Academic Press / Elsevier.
 #------------------------------------------------------------------------------
@@ -99,7 +99,7 @@ text( xpos , ypos ,
 
 # Plot a histogram of the posterior differences of theta values.
 thetaDiff = theta1Sample - theta2Sample
-source("plotPost.R")
+
 openGraph(width=7,height=4)
 plotPost( thetaDiff , xlab=expression(theta[1]-theta[2]) , compVal=0.0 )
 #saveGraph(file="BernTwoJagsDiff",type="eps")

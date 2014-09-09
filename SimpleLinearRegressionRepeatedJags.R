@@ -1,9 +1,8 @@
 graphics.off()
 rm(list=ls(all=TRUE))
 fileNameRoot="SimpleLinearRegressionRepeatedJags" 
-if ( .Platform$OS.type != "windows" ) { 
-  windows <- function( ... ) X11( ... ) 
-}
+source("openGraphSaveGraph.R")
+source("plotPost.R")
 require(rjags)         # Kruschke, J. K. (2011). Doing Bayesian Data Analysis:
                        # A Tutorial with R and BUGS. Academic Press / Elsevier.
 #------------------------------------------------------------------------------
@@ -136,13 +135,13 @@ codaSamples = coda.samples( jagsModel , variable.names=parameters ,
 #------------------------------------------------------------------------------
 # EXAMINE THE RESULTS
 
-checkConvergence = T
+checkConvergence = FALSE
 if ( checkConvergence ) {
-  show( summary( codaSamples ) )
-  windows()
-  plot( codaSamples , ask=F )  
-  windows()
-  autocorr.plot( codaSamples , ask=F )
+  openGraph(width=7,height=7)
+  autocorr.plot( codaSamples[[1]] , ask=FALSE ) 
+  show( gelman.diag( codaSamples ) )
+  effectiveChainLength = effectiveSize( codaSamples ) 
+  show( effectiveChainLength )
 }
 
 # Convert coda-object codaSamples to matrix object for easier handling.
@@ -166,22 +165,22 @@ mu1Gsamp = zmu1Gsamp * ySD / xSD
 b0samp   = zb0samp   * ySD + yM - zb1samp   * ySD * xM / xSD
 b1samp   = zb1samp   * ySD / xSD
 
-source("plotPost.R")
-
 # Display believable intercept and slope values
-windows(10,5.5)
+openGraph(10,5.5)
 par( mar=c(4,4,1.75,1)+0.1 , mgp=c(2.5,0.8,0) )
 layout( matrix(1:2,nrow=1) )
 thinIdx = round(seq(1,length(mu0Gsamp),length=700))
 plot( zmu1Gsamp[thinIdx] , zmu0Gsamp[thinIdx] , cex.lab=1.75 ,
-      ylab="Standardized Intercept" , xlab="Standardized Slope" )
+      ylab="Standardized Intercept" , xlab="Standardized Slope" , 
+      col="skyblue")
 plot( mu1Gsamp[thinIdx] , mu0Gsamp[thinIdx] , cex.lab=1.0 ,
       ylab=paste("Intercept (",yPlotLab," when ",xPlotLab," =0)",sep="") ,
-      xlab=paste("Slope (change in",yPlotLab,"per unit",xPlotLab,")") )
-savePlot(file=paste(fileNameRoot,"SlopeIntercept.eps",sep=""),type="eps")
+      xlab=paste("Slope (change in",yPlotLab,"per unit",xPlotLab,")") ,
+      col="skyblue")
+saveGraph(file=paste(fileNameRoot,"SlopeIntercept",sep=""),type="eps")
 
 # Make graphs of data and corresponding believable slopes:
-windows(12,6)
+openGraph(12,6)
 par( mar=c(4,4,1.75,1)+0.1 , mgp=c(2.5,0.8,0) )
 layout(matrix(c(1:5,1:5,6:10),nrow=3,byrow=T))
 xlims = c( min( dataMat[,xColName] ) ,  max( dataMat[,xColName] ) )
@@ -206,12 +205,13 @@ for ( sIdx in 1:length(sIdVec) ) {
            lty=sIdx , pch=sIdx%%26 , type="o")
 }
 # Plot histograms of corresponding posterior slopes:
+xLim=quantile(c(b1samp,mu1Gsamp),probs=c(0.001,0.999))
 for ( sIdx in subjIdxVec ) {
-    histInfo = plotPost( b1samp[sIdx,] , xlab="Slope" , compVal=0.0 , breaks=30 ,
-                     HDItextPlace=0.9 )
+    histInfo = plotPost( b1samp[sIdx,] , xlab="Slope" , compVal=0.0 , 
+                     HDItextPlace=0.9 , xlim=xLim )
 }
 histInfo = plotPost( mu1Gsamp , xlab="Slope, Group Level" , compVal=0.0 ,
-                     breaks=30 , HDItextPlace=0.9 )
-savePlot(file=paste(fileNameRoot,"Data.eps",sep=""),type="eps")
+                     HDItextPlace=0.9 , xlim=xLim )
+saveGraph(file=paste(fileNameRoot,"Data",sep=""),type="eps")
 
 #------------------------------------------------------------------------------

@@ -238,7 +238,9 @@ plot( theta , posterior[,plotmuidx]/sum(posterior[,plotmuidx])*(1/binwidth)
 	,ylab=bquote("p("*theta*"|"*mu*"=.25,D)") 
 	,cex.lab=cexfac*.8 ,cex.axis=cexfac*.8 )
 
-want_eps_file = TRUE
+want_eps_file = FALSE
+# To save graphs, please see update at
+# http://doingbayesiandataanalysis.blogspot.com/2013/01/uniform-r-code-for-opening-saving.html
 if ( want_eps_file ) {
 	if ( hypertype == "beta" ) {
 		epsfilename = paste( "BinomHierGrid" 

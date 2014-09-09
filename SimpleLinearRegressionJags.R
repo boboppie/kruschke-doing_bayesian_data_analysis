@@ -1,9 +1,8 @@
 graphics.off()
 rm(list=ls(all=TRUE))
 fileNameRoot="SimpleLinearRegressionJags" # for constructing output filenames
-if ( .Platform$OS.type != "windows" ) { 
-  windows <- function( ... ) X11( ... ) 
-}
+source("openGraphSaveGraph.R")
+source("plotPost.R")
 require(rjags)         # Kruschke, J. K. (2011). Doing Bayesian Data Analysis:
                        # A Tutorial with R and BUGS. Academic Press / Elsevier.
 #------------------------------------------------------------------------------
@@ -81,13 +80,13 @@ codaSamples = coda.samples( jagsModel , variable.names=parameters ,
 #------------------------------------------------------------------------------
 # EXAMINE THE RESULTS
 
-checkConvergence = F
+checkConvergence = FALSE
 if ( checkConvergence ) {
-  show( summary( codaSamples ) )
-  windows()
-  plot( codaSamples , ask=F )  
-  windows()
-  autocorr.plot( codaSamples , ask=F )
+  openGraph(width=7,height=7)
+  autocorr.plot( codaSamples[[1]] , ask=FALSE ) 
+  show( gelman.diag( codaSamples ) )
+  effectiveChainLength = effectiveSize( codaSamples ) 
+  show( effectiveChainLength )
 }
 
 # Convert coda-object codaSamples to matrix object for easier handling.
@@ -128,29 +127,28 @@ for ( xIdx in 1:length(xPostPred) ) {
 }
 
 # Display believable beta0 and b1 values
-windows(10,5)
+openGraph(10,5)
 par( mar=c(4,4,1,1)+0.1 , mgp=c(2.5,0.8,0) )
 layout( matrix(1:2,nrow=1) )
 thinIdx = seq(1,length(b0),length=700)
 plot( z1[thinIdx] , z0[thinIdx] , cex.lab=1.75 ,
-      ylab="Standardized Intercept" , xlab="Standardized Slope" )
+      ylab="Standardized Intercept" , xlab="Standardized Slope" ,
+      col="skyblue")
 plot( b1[thinIdx] , b0[thinIdx] , cex.lab=1.75 ,
-      ylab="Intercept (ht when wt=0)" , xlab="Slope (pounds per inch)" )
-savePlot(file=paste(fileNameRoot,"SlopeIntercept.eps",sep=""),type="eps")
+      ylab="Intercept (ht when wt=0)" , xlab="Slope (pounds per inch)" ,
+      col="skyblue")
+saveGraph(file=paste(fileNameRoot,"SlopeIntercept",sep=""),type="eps")
 
 # Display the posterior of the b1:
-source("plotPost.R")
-windows(10,4)
+openGraph(10,4)
 par( mar=c(4,4,1,1)+0.1 , mgp=c(2.5,0.8,0) )
 layout( matrix(1:2,nrow=1) )
-histInfo = plotPost( z1 , xlab="Standardized slope" , compVal=0.0 ,
-                     breaks=30  )
-histInfo = plotPost( b1 , xlab="Slope (pounds per inch)" , compVal=0.0 ,
-                     breaks=30  )
-savePlot(file=paste(fileNameRoot,"PostSlope.eps",sep=""),type="eps")
+histInfo = plotPost( z1 , xlab="Standardized slope" , compVal=0.0 )
+histInfo = plotPost( b1 , xlab="Slope (pounds per inch)" , compVal=0.0 )
+saveGraph(file=paste(fileNameRoot,"PostSlope",sep=""),type="eps")
 
 # Display data with believable regression lines and posterior predictions.
-windows()
+openGraph()
 par( mar=c(3,3,2,1)+0.5 , mgp=c(2.1,0.8,0) )
 # Plot data values:
 xRang = max(x)-min(x)
@@ -163,12 +161,12 @@ plot( x , y , cex=1.5 , lwd=2 , col="black" , xlim=xLim , ylim=yLim ,
       main="Data with credible regression lines" , cex.main=1.33  )
 # Superimpose a smattering of believable regression lines:
 for ( i in seq(from=1,to=length(b0),length=50) ) {
-    abline( b0[i] , b1[i] , col="grey" )
+    abline( b0[i] , b1[i] , col="skyblue" )
 }
-savePlot(file=paste(fileNameRoot,"DataLines.eps",sep=""),type="eps")
+saveGraph(file=paste(fileNameRoot,"DataLines",sep=""),type="eps")
 
 # Display data with HDIs of posterior predictions.
-windows()
+openGraph()
 par( mar=c(3,3,2,1)+0.5 , mgp=c(2.1,0.8,0) )
 # Plot data values:
 yLim= c( min(yHDIlim) , max(yHDIlim) )
@@ -176,8 +174,8 @@ plot( x , y , cex=1.5 , lwd=2 , col="black" , xlim=xLim , ylim=yLim ,
       xlab="X (height in inches)" , ylab="Y (weight in pounds)" , cex.lab=1.5 ,
       main="Data with 95% HDI & Mean of Posterior Predictions" , cex.main=1.33  )
 # Superimpose posterior predicted 95% HDIs:
-segments( xPostPred, yHDIlim[,1] , xPostPred, yHDIlim[,2] , lwd=3, col="grey" )
-points( xPostPred , rowMeans( yPostPred ) , pch="+" , cex=2 , col="grey" )
-savePlot(file=paste(fileNameRoot,"DataPred.eps",sep=""),type="eps")
+segments( xPostPred, yHDIlim[,1] , xPostPred, yHDIlim[,2] , lwd=3, col="skyblue" )
+points( xPostPred , rowMeans( yPostPred ) , pch="+" , cex=2 , col="skyblue" )
+saveGraph(file=paste(fileNameRoot,"DataPred",sep=""),type="eps")
 
 #------------------------------------------------------------------------------

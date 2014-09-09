@@ -1,9 +1,8 @@
 graphics.off()
 rm(list=ls(all=TRUE))
 fileNameRoot="BernBetaModelCompJags" # for constructing output filenames
-if ( .Platform$OS.type != "windows" ) { 
-  windows <- function( ... ) X11( ... ) 
-}
+source("openGraphSaveGraph.R")
+source("plotPost.R")
 require(rjags)         # Kruschke, J. K. (2011). Doing Bayesian Data Analysis:
                        # A Tutorial with R and BUGS. Academic Press / Elsevier.
 #------------------------------------------------------------------------------
@@ -57,7 +56,7 @@ parameters = c("theta","modelIndex")
 adaptSteps = 1000             # Number of steps to "tune" the samplers.
 burnInSteps = 10000           # Number of steps to "burn-in" the samplers.
 nChains = 1                   # Number of chains to run.
-numSavedSteps=100000          # Total number of steps in chains to save.
+numSavedSteps=500000          # Total number of steps in chains to save.
 thinSteps=1                   # Number of steps to "thin" (1=keep every step).
 nPerChain = ceiling( ( numSavedSteps * thinSteps ) / nChains ) # Steps per chain.
 # Create, initialize, and adapt the model:
@@ -76,11 +75,13 @@ codaSamples = coda.samples( jagsModel , variable.names=parameters ,
 #------------------------------------------------------------------------------
 # EXAMINE THE RESULTS.
 
-checkConvergence = F
+checkConvergence = FALSE
 if ( checkConvergence ) {
-  show( summary( codaSamples ) )
-  plot( codaSamples , ask=T )  # not very useful for this application
-  autocorr.plot( codaSamples , ask=T )
+  openGraph(width=7,height=7)
+  autocorr.plot( codaSamples[[1]] , ask=FALSE )
+  show( gelman.diag( codaSamples ) )
+  effectiveChainLength = effectiveSize( codaSamples ) 
+  show( effectiveChainLength )
 }
 
 # Convert coda-object codaSamples to matrix object for easier handling.
@@ -103,16 +104,16 @@ thetaSampleM2 = thetaSample[ modelIdxSample == 2 ]
 
 # Plot histograms of sampled theta values for each model,
 # with pM displayed.
-windows()
+openGraph()
 layout( matrix(1:2,nrow=2) )
 hist( thetaSampleM1 , main="Posterior Theta_1 when Model Index = 1" ,
-      xlab=expression(theta) , xlim=c(0,1) ,
-      col="grey" , border="white" )
+      xlab=expression(theta) , xlim=c(0,1) , breaks=seq(0,1,0.025) ,
+      col="skyblue" , border="white" )
 text( 0 , 0 , bquote( "p(M1|D)" == .(signif(pM1,3)) ) , adj=c(0,-2) , cex=1.5 )
 hist( thetaSampleM2 , main="Posterior Theta_2 when Model Index = 2" ,
-      xlab=expression(theta) , xlim=c(0,1) ,
-      col="grey" , border="white" )
+      xlab=expression(theta) , xlim=c(0,1) , breaks=seq(0,1,0.025) ,
+      col="skyblue" , border="white" )
 text( 0 , 0 , bquote( "p(M2|D)" == .(signif(pM2,3)) ) , adj=c(0,-2) , cex=1.5 )
 
-savePlot( file=paste(fileNameRoot,".eps",sep="") , type="eps" )
-savePlot( file=paste(fileNameRoot,".jpg",sep="") , type="jpg" )
+saveGraph( file=fileNameRoot , type="eps" )
+saveGraph( file=fileNameRoot , type="jpg" )

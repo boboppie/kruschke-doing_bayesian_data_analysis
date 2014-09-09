@@ -1,9 +1,8 @@
 graphics.off()
 rm(list=ls(all=TRUE))
 fileNameRoot="ANOVAtwowayJagsWithinSubj" # for constructing output filenames
-if ( .Platform$OS.type != "windows" ) { 
-  windows <- function( ... ) X11( ... ) 
-}
+source("openGraphSaveGraph.R")
+source("plotPost.R")
 require(rjags)         # Kruschke, J. K. (2011). Doing Bayesian Data Analysis:
                        # A Tutorial with R and BUGS. Academic Press / Elsevier.
 #------------------------------------------------------------------------------
@@ -134,21 +133,19 @@ codaSamples = coda.samples( jagsModel , variable.names=parameters ,
 #------------------------------------------------------------------------------
 # EXAMINE THE RESULTS
 
-checkConvergence = F
+checkConvergence = FALSE
 if ( checkConvergence ) {
-  show( summary( codaSamples ) )
-  windows()
-  plot( codaSamples , ask=F )  
-  windows()
-  autocorr.plot( codaSamples , ask=F )
+  openGraph(width=7,height=7)
+  autocorr.plot( codaSamples[[1]] , ask=FALSE )
+  show( gelman.diag( codaSamples ) )
+  effectiveChainLength = effectiveSize( codaSamples ) 
+  show( effectiveChainLength )
 }
 
 # Convert coda-object codaSamples to matrix object for easier handling.
 # But note that this concatenates the different chains into one long chain.
 # Result is mcmcChain[ stepIdx , paramIdx ]
 mcmcChain = as.matrix( codaSamples )
-
-source("plotPost.R")
 
 # Extract and plot the SDs:
 sigmaSample = mcmcChain[,"sigma"]
@@ -157,16 +154,16 @@ a2SDSample = mcmcChain[,"a2SD"]
 a1a2SDSample = mcmcChain[,"a1a2SD"]
 aSSDSample = mcmcChain[,"aSSD"]
 
-windows()
+openGraph(width=7,height=7)
 layout( matrix(1:6,nrow=2) )
 par( mar=c(3,1,2.5,0) , mgp=c(2,0.7,0) )
-plotPost( sigmaSample , xlab="sigma" , main="Cell SD" , breaks=30 , showMode=T )
-plotPost( a1SDSample , xlab="a1SD" , main="a1 SD" , breaks=30 , showMode=T )
-plotPost( a2SDSample , xlab="a2SD" , main="a2 SD" , breaks=30 , showMode=T )
-plotPost( a1a2SDSample , xlab="a1a2SD" , main="Interaction SD" , breaks=30, 
+plotPost( sigmaSample , xlab="sigma" , main="Cell SD"  , showMode=T )
+plotPost( a1SDSample , xlab="a1SD" , main="a1 SD"  , showMode=T )
+plotPost( a2SDSample , xlab="a2SD" , main="a2 SD"  , showMode=T )
+plotPost( a1a2SDSample , xlab="a1a2SD" , main="Interaction SD" , 
           showMode=T )
-plotPost( aSSDSample , xlab="aSSD" , main="aS SD" , breaks=30 , showMode=T )
-savePlot(file=paste(fileNameRoot,"SD.eps",sep=""),type="eps")
+plotPost( aSSDSample , xlab="aSSD" , main="aS SD"  , showMode=T )
+saveGraph(file=paste(fileNameRoot,"SD",sep=""),type="eps")
 
 # Extract a values:
 a0Sample = mcmcChain[, "a0" ]
@@ -248,7 +245,7 @@ bSSample = bSSample * ySDorig
 b1b2Sample = b1b2Sample * ySDorig
 
 # Plot b values:
-windows((dataList$Nx1Lvl+1)*2.75,(dataList$Nx2Lvl+1)*2.0)
+openGraph((dataList$Nx1Lvl+1)*2.75,(dataList$Nx2Lvl+1)*2.0)
 layoutMat = matrix( 0 , nrow=(dataList$Nx2Lvl+1) , ncol=(dataList$Nx1Lvl+1) )
 layoutMat[1,1] = 1
 layoutMat[1,2:(dataList$Nx1Lvl+1)] = 1:dataList$Nx1Lvl + 1
@@ -258,24 +255,23 @@ layoutMat[2:(dataList$Nx2Lvl+1),2:(dataList$Nx1Lvl+1)] = matrix(
     ncol=dataList$Nx1Lvl , byrow=T )
 layout( layoutMat )
 par( mar=c(4,0.5,2.5,0.5) , mgp=c(2,0.7,0) )
-histinfo = plotPost( b0Sample , xlab=expression(beta * 0) , main="Baseline" ,
-                     breaks=30  )
+histinfo = plotPost( b0Sample , xlab=expression(beta * 0) , main="Baseline" )
 for ( x1idx in 1:dataList$Nx1Lvl ) {
   histinfo = plotPost( b1Sample[x1idx,] , xlab=bquote(beta*1[.(x1idx)]) ,
-                       main=paste("x1:",x1names[x1idx]) , breaks=30 )
+                       main=paste("x1:",x1names[x1idx])  )
 }
 for ( x2idx in 1:dataList$Nx2Lvl ) {
   histinfo = plotPost( b2Sample[x2idx,] , xlab=bquote(beta*2[.(x2idx)]) ,
-                       main=paste("x2:",x2names[x2idx]) , breaks=30 )
+                       main=paste("x2:",x2names[x2idx])  )
 }
 for ( x2idx in 1:dataList$Nx2Lvl ) {
   for ( x1idx in 1:dataList$Nx1Lvl ) {
-    histinfo = plotPost( b1b2Sample[x1idx,x2idx,] , breaks=30 ,
+    histinfo = plotPost( b1b2Sample[x1idx,x2idx,]  ,
               xlab=bquote(beta*12[.(x1idx)*","*.(x2idx)]) ,
               main=paste("x1:",x1names[x1idx],", x2:",x2names[x2idx])  )
   }
 }
-savePlot(file=paste(fileNameRoot,"b.eps",sep=""),type="eps")
+saveGraph(file=paste(fileNameRoot,"b",sep=""),type="eps")
 
 # Display contrast analyses
 nContrasts = length( x1contrastList )
@@ -283,19 +279,19 @@ if ( nContrasts > 0 ) {
    nPlotPerRow = 5
    nPlotRow = ceiling(nContrasts/nPlotPerRow)
    nPlotCol = ceiling(nContrasts/nPlotRow)
-   windows(3.75*nPlotCol,2.5*nPlotRow)
+   openGraph(3.75*nPlotCol,2.5*nPlotRow)
    layout( matrix(1:(nPlotRow*nPlotCol),nrow=nPlotRow,ncol=nPlotCol,byrow=T) )
    par( mar=c(4,0.5,2.5,0.5) , mgp=c(2,0.7,0) )
    for ( cIdx in 1:nContrasts ) {
        contrast = matrix( x1contrastList[[cIdx]],nrow=1) # make it a row matrix
        incIdx = contrast!=0
-       histInfo = plotPost( contrast %*% b1Sample , compVal=0 , breaks=30 ,
+       histInfo = plotPost( contrast %*% b1Sample , compVal=0  ,
                 xlab=paste( round(contrast[incIdx],2) , x1names[incIdx] ,
                             c(rep("+",sum(incIdx)-1),"") , collapse=" " ) ,
                 cex.lab = 1.0 ,
                 main=paste( "X1 Contrast:", names(x1contrastList)[cIdx] ) )
    }
-   savePlot(file=paste(fileNameRoot,"x1Contrasts.eps",sep=""),type="eps")
+   saveGraph(file=paste(fileNameRoot,"x1Contrasts",sep=""),type="eps")
 }
 #
 nContrasts = length( x2contrastList )
@@ -303,19 +299,19 @@ if ( nContrasts > 0 ) {
    nPlotPerRow = 5
    nPlotRow = ceiling(nContrasts/nPlotPerRow)
    nPlotCol = ceiling(nContrasts/nPlotRow)
-   windows(3.75*nPlotCol,2.5*nPlotRow)
+   openGraph(3.75*nPlotCol,2.5*nPlotRow)
    layout( matrix(1:(nPlotRow*nPlotCol),nrow=nPlotRow,ncol=nPlotCol,byrow=T) )
    par( mar=c(4,0.5,2.5,0.5) , mgp=c(2,0.7,0) )
    for ( cIdx in 1:nContrasts ) {
        contrast = matrix( x2contrastList[[cIdx]],nrow=1) # make it a row matrix
        incIdx = contrast!=0
-       histInfo = plotPost( contrast %*% b2Sample , compVal=0 , breaks=30 ,
+       histInfo = plotPost( contrast %*% b2Sample , compVal=0  ,
                 xlab=paste( round(contrast[incIdx],2) , x2names[incIdx] ,
                             c(rep("+",sum(incIdx)-1),"") , collapse=" " ) ,
                 cex.lab = 1.0 ,
                 main=paste( "X2 Contrast:", names(x2contrastList)[cIdx] ) )
    }
-   savePlot(file=paste(fileNameRoot,"x2Contrasts.eps",sep=""),type="eps")
+   saveGraph(file=paste(fileNameRoot,"x2Contrasts",sep=""),type="eps")
 }
 #
 nContrasts = length( x1x2contrastList )
@@ -323,7 +319,7 @@ if ( nContrasts > 0 ) {
    nPlotPerRow = 5
    nPlotRow = ceiling(nContrasts/nPlotPerRow)
    nPlotCol = ceiling(nContrasts/nPlotRow)
-   windows(3.75*nPlotCol,2.5*nPlotRow)
+   openGraph(3.75*nPlotCol,2.5*nPlotRow)
    layout( matrix(1:(nPlotRow*nPlotCol),nrow=nPlotRow,ncol=nPlotCol,byrow=T) )
    par( mar=c(4,0.5,2.5,0.5) , mgp=c(2,0.7,0) )
    for ( cIdx in 1:nContrasts ) {
@@ -341,10 +337,10 @@ if ( nContrasts > 0 ) {
          }
        }
        histInfo = plotPost( apply( contrastArr * b1b2Sample , 3 , sum ) ,
-                compVal=0 , breaks=30 , xlab=contrastLab , cex.lab = 0.75 ,
+                compVal=0  , xlab=contrastLab , cex.lab = 0.75 ,
                 main=paste( names(x1x2contrastList)[cIdx] ) )
    }
-   savePlot(file=paste(fileNameRoot,"x1x2Contrasts.eps",sep=""),type="eps")
+   saveGraph(file=paste(fileNameRoot,"x1x2Contrasts",sep=""),type="eps")
 }
 
 #==============================================================================
@@ -352,9 +348,9 @@ if ( nContrasts > 0 ) {
 
 theData = data.frame( y=y , x1=factor(x1,labels=x1names) ,
                             x2=factor(x2,labels=x2names) )
-windows()
+openGraph(width=7,height=7)
 interaction.plot( theData$x1 , theData$x2 , theData$y , type="b" )
-savePlot(file=paste(fileNameRoot,"DataPlot.eps",sep=""),type="eps")
+saveGraph(file=paste(fileNameRoot,"DataPlot",sep=""),type="eps")
 aovresult = aov( y ~ x1 * x2 , data = theData )
 cat("\n------------------------------------------------------------------\n\n")
 print( summary( aovresult ) )

@@ -1,9 +1,8 @@
 graphics.off()
 rm(list=ls(all=TRUE))
 fileNameRoot="SystemsJags" # for constructing output filenames
-if ( .Platform$OS.type != "windows" ) { 
-  windows <- function( ... ) X11( ... ) 
-}
+source("openGraphSaveGraph.R")
+source("plotPost.R")
 require(rjags)         # Kruschke, J. K. (2011). Doing Bayesian Data Analysis:
                        # A Tutorial with R and BUGS. Academic Press / Elsevier.
 #------------------------------------------------------------------------------
@@ -77,13 +76,13 @@ codaSamples = coda.samples( jagsModel , variable.names=parameters ,
 #------------------------------------------------------------------------------
 # EXAMINE THE RESULTS
 
-checkConvergence = F
+checkConvergence = FALSE
 if ( checkConvergence ) {
-  show( summary( codaSamples ) )
-  windows()
-  plot( codaSamples , ask=F )  
-  windows()
-  autocorr.plot( codaSamples , ask=F )
+  openGraph(width=7,height=7)
+  autocorr.plot( codaSamples[[1]] , ask=FALSE )
+  show( gelman.diag( codaSamples ) )
+  effectiveChainLength = effectiveSize( codaSamples ) 
+  show( effectiveChainLength )
 }
 
 # Convert coda-object codaSamples to matrix object for easier handling.
@@ -103,32 +102,32 @@ for ( sIdx in 1:nSubj ) {
     tauSample = rbind( tauSample , mcmcChain[, paste("tau[",sIdx,"]",sep="") ] )
 }
 
-source("plotPost.R")
-
 # Plot the aircraft mu:
-windows(15,6)
+openGraph(width=15,height=5)
 layout( matrix( 1:nSubj , nrow=2 , byrow=T ) )
+xLim=quantile(muSample,probs=c(0.001,0.999))
 for ( sIdx in 1:nSubj ) {
-    histInfo = plotPost( muSample[sIdx,] , xlab=bquote(mu[.(sIdx)]) )
+    histInfo = plotPost( muSample[sIdx,] , xlab=bquote(mu[.(sIdx)]) , xlim=xLim )
 }
-savePlot(file=paste(fileNameRoot,"PostMu.eps",sep=""),type="eps")
+saveGraph(file=paste(fileNameRoot,"PostMu",sep=""),type="eps")
 
 # Plot the aircraft tau:
-windows(15,6)
+openGraph(width=15,height=5)
 layout( matrix( 1:nSubj , nrow=2 , byrow=T ) )
+xLim=quantile(tauSample,probs=c(0.001,0.999))
 for ( sIdx in 1:nSubj ) {
     histInfo = plotPost( tauSample[sIdx,] , xlab=bquote(tau[.(sIdx)]) ,
-                         HDItextPlace=.3 )
+                         HDItextPlace=.5 , showMode=TRUE , xlim=xLim )
 }
-savePlot(file=paste(fileNameRoot,"PostTau.eps",sep=""),type="eps")
+saveGraph(file=paste(fileNameRoot,"PostTau",sep=""),type="eps")
 
 # Plot the hyperdistributions:
-windows(15,3)
+openGraph(width=15,height=3)
 layout( matrix(1:4,ncol=4) )
-histInfo = plotPost( muGsample , xlab=expression(mu[G]) , breaks=30 )
-histInfo = plotPost( tauGsample , xlab=expression(tau[G]) , breaks=30 )
-histInfo = plotPost( mSample , xlab=expression(m) , breaks=30 )
-histInfo = plotPost( dSample , xlab=expression(d) , breaks=30 , HDItextPlace=.1 )
-savePlot(file=paste(fileNameRoot,"PostHyper.eps",sep=""),type="eps")
+histInfo = plotPost( muGsample , xlab=expression(mu[G]) )
+histInfo = plotPost( tauGsample , xlab=expression(tau[G]) , showMode=TRUE )
+histInfo = plotPost( mSample , xlab=expression(m) , showMode=TRUE )
+histInfo = plotPost( dSample , xlab=expression(d) , HDItextPlace=.1 , showMode=TRUE )
+saveGraph(file=paste(fileNameRoot,"PostHyper",sep=""),type="eps")
 
 #------------------------------------------------------------------------------

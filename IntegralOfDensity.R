@@ -26,5 +26,5 @@ text( sdval , .8*max(y) ,
       bquote(
         paste( sum(,x,) , " " , Delta , "x p(x) = " , .(signif(area,3)) )
       ) , adj=c(0,.5) )
-# Save the plot to an EPS file.
-dev.copy2eps( file = "IntegralOfDensity.eps" )
+# To save graphs, please see update at
+# http://doingbayesiandataanalysis.blogspot.com/2013/01/uniform-r-code-for-opening-saving.html

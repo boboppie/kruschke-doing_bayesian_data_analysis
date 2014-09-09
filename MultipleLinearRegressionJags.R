@@ -1,9 +1,7 @@
 graphics.off()
 rm(list=ls(all=TRUE))
 fileNameRoot="MultipleLinearRegressionJags" # for constructing output filenames
-if ( .Platform$OS.type != "windows" ) { 
-  windows <- function( ... ) X11( ... ) 
-}
+source("openGraphSaveGraph.R")
 require(rjags)         # Kruschke, J. K. (2011). Doing Bayesian Data Analysis:
                        # A Tutorial with R and BUGS. Academic Press / Elsevier.
 #------------------------------------------------------------------------------
@@ -143,9 +141,9 @@ codaSamples = coda.samples( jagsModel , variable.names=parameters ,
 checkConvergence = F
 if ( checkConvergence ) {
   show( summary( codaSamples ) )
-  windows()
+  openGraph()
   plot( codaSamples , ask=F )  
-  windows()
+  openGraph()
   autocorr.plot( codaSamples , ask=F )
 }
 
@@ -183,15 +181,15 @@ source("plotPost.R")
 
 # Scatter plots of parameter values, pairwise:
 if ( nPredictors <= 6 ) { # don't display if too many predictors
-    windows()
+    openGraph()
     thinIdx = round(seq(1,length(zb0Samp),length=200))
     pairs( cbind( zSigmaSamp[thinIdx] , zb0Samp[thinIdx] , zbSamp[thinIdx,] )  ,
       labels=c("Sigma zy","zIntercept",paste("zSlope",predictorNames,sep="")))
-    windows()
+    openGraph()
     thinIdx = seq(1,length(b0Samp),length=700)
     pairs( cbind( sigmaSamp[thinIdx] , b0Samp[thinIdx] , bSamp[thinIdx,] ) ,
       labels=c( "Sigma y" , "Intercept", paste("Slope",predictorNames,sep="")))
-    savePlot(file=paste(fileNameRoot,"PostPairs.eps",sep=""),type="eps")
+    saveGraph(file=paste(fileNameRoot,"PostPairs.eps",sep=""),type="eps")
 }
 # Show correlation matrix on console:
 cat("\nCorrlations of posterior sigma, b0, and bs:\n")
@@ -201,7 +199,7 @@ show( cor( cbind( sigmaSamp , b0Samp , bSamp ) ) )
 nPlotPerRow = 5
 nPlotRow = ceiling((2+nPredictors)/nPlotPerRow)
 nPlotCol = ceiling((2+nPredictors)/nPlotRow)
-windows(3.5*nPlotCol,2.25*nPlotRow)
+openGraph(3.5*nPlotCol,2.25*nPlotRow)
 layout( matrix(1:(nPlotRow*nPlotCol),nrow=nPlotRow,ncol=nPlotCol,byrow=T) )
 par( mar=c(4,3,2.5,0) , mgp=c(2,0.7,0) )
 histInfo = plotPost( sigmaSamp , xlab="Sigma Value" , compVal=NULL ,
@@ -217,7 +215,7 @@ histInfo = plotPost( bSamp[,sIdx] , xlab="Slope Value" , compVal=0.0 ,
                                   Delta * .(predictorNames[sIdx]) ) ,
                      cex.main=1.67 , cex.lab=1.33 )
 }
-savePlot(file=paste(fileNameRoot,"PostHist.eps",sep=""),type="eps")
+saveGraph(file=paste(fileNameRoot,"PostHist.eps",sep=""),type="eps")
 
 # Posterior prediction:
 # Specify x values for which predicted y's are needed.
