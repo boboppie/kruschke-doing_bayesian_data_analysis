@@ -1,8 +1,6 @@
 kruschke-doing-bayesian-data-analysis
 =====================================
 
-John K. Kruschke's Doing Bayesian Data Analysis:  A Tutorial with R and BUGS 
+John K. Kruschke's Doing Bayesian Data Analysis:  A Tutorial with R and BUGS (1e) / A Tutorial with R, JAGS, and Stan (2e) 
 
-I enjoy reading this book very much. The [homepage for the book is here](http://www.indiana.edu/~kruschke/DoingBayesianDataAnalysis/). The programs are downloaded from [here](http://www.indiana.edu/~kruschke/DoingBayesianDataAnalysis/Programs/). 
-
-2nd Edition [site](https://sites.google.com/site/doingbayesiandataanalysis/)
+I enjoy reading this book very much. The [homepage for the book is here](https://sites.google.com/site/doingbayesiandataanalysis/). Author's [homepage is here](http://www.indiana.edu/~kruschke/).
