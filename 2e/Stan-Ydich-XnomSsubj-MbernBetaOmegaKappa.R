@@ -5,7 +5,8 @@
 source("DBDA2E-utilities.R")
 #===============================================================================
 
-genMCMC = function( data , numSavedSteps=50000 , saveName=NULL , thinSteps=1 ) { 
+genMCMC = function( data , sName="s" , yName="y" ,  
+                    numSavedSteps=50000 , saveName=NULL , thinSteps=1 ) { 
   require(rjags)
   require(rstan)
   #-----------------------------------------------------------------------------
@@ -13,8 +14,8 @@ genMCMC = function( data , numSavedSteps=50000 , saveName=NULL , thinSteps=1 ) {
   # N.B.: This function expects the data to be a data frame, 
   # with one component named y being a vector of integer 0,1 values,
   # and one component named s being a factor of subject identifiers.
-  y = as.numeric(data$y)
-  s = as.numeric(data$s) # converts character to consecutive integer levels
+  y = as.numeric(data[,yName])
+  s = as.numeric(data[,sName]) # ensures consecutive integer levels
   # Do some checking that data make sense:
   if ( any( y!=0 & y!=1 ) ) { stop("All y values must be 0 or 1.") }
   Ntotal = length(y)

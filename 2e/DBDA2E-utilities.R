@@ -1,6 +1,6 @@
 # Utility programs for use with the book,
-#   Kruschke, J. K. (2014). Doing Bayesian Data Analysis: 
-#   A Tutorial with R, JAGS, and Stan. 2nd Edition. Academic Press.
+#   Kruschke, J. K. (2015). Doing Bayesian Data Analysis, Second Edition: 
+#   A Tutorial with R, JAGS, and Stan. Academic Press / Elsevier.
 # This file contains several functions that are called by other programs
 # or can be called directly by the user. To load all the functions into
 # R's working memory, at R's command line type:
@@ -8,31 +8,28 @@
 
 #------------------------------------------------------------------------------
 
-bookInfo = "Kruschke, J. K. (2014). Doing Bayesian Data Analysis:\nA Tutorial with R, JAGS, and Stan. 2nd Edition. Academic Press."
-bannerBreak = "\n*******************************************************************\n"
+bookInfo = "Kruschke, J. K. (2015). Doing Bayesian Data Analysis, Second Edition:\nA Tutorial with R, JAGS, and Stan. Academic Press / Elsevier."
+bannerBreak = "\n*********************************************************************\n"
 cat(paste0(bannerBreak,bookInfo,bannerBreak,"\n"))
 
 #------------------------------------------------------------------------------
 # Check that required packages are installed:
+want = c("parallel","rjags","runjags")
+have = want %in% rownames(installed.packages())
+if ( any(!have) ) { install.packages( want[!have] ) }
 
-pkgTest <- function( pkgName ) {
-  if ( !require( pkgName , character.only=TRUE ) ) {
-    install.packages( pkgName , dep=TRUE )
-    if ( !require( pkgName , character.only=TRUE ) ) { 
-      stop(paste0("Package ", pkgName ," not found")) 
-    }
-  }
-}
-
-requiredPackages = c("parallel","rjags","runjags") #  rstan is not on CRAN!
-for ( pkgName in requiredPackages ) { pkgTest( pkgName ) }
+# Load parallel package for detectCores function:
+library(parallel)
+# Set some options in runjags:
+library(runjags)
+runjags.options( inits.warning=FALSE , rng.warning=FALSE )
 
 #------------------------------------------------------------------------------
 
 # Make some data files for examples...
 createDataFiles=FALSE
 if ( createDataFiles ) {
-
+  
   source("HtWtDataGenerator.R")
   N=300
   m = HtWtDataGenerator( N , rndsd=47405 )
@@ -78,13 +75,24 @@ if ( createDataFiles ) {
 
 #------------------------------------------------------------------------------
 # Functions for opening and saving graphics that operate the same for 
-# Windows and Macintosh and Linux operating systems. At least, that's the hope.
+# Windows and Macintosh and Linux operating systems. At least, that's the hope!
 
 openGraph = function( width=7 , height=7 , mag=1.0 , ... ) {
   if ( .Platform$OS.type != "windows" ) { # Mac OS, Linux
-    X11( width=width*mag , height=height*mag , type="cairo" , ... )
+    tryInfo = try( X11( width=width*mag , height=height*mag , type="cairo" , 
+                        ... ) )
+    if ( class(tryInfo)=="try-error" ) {
+      lineInput = readline("WARNING: Previous graphics windows will be closed because of too many open windows.\nTO CONTINUE, PRESS <ENTER> IN R CONSOLE.\n")
+      graphics.off() 
+      X11( width=width*mag , height=height*mag , type="cairo" , ... )
+    }
   } else { # Windows OS
-    windows( width=width*mag , height=height*mag , ... )
+    tryInfo = try( windows( width=width*mag , height=height*mag , ... ) )
+    if ( class(tryInfo)=="try-error" ) {
+      lineInput = readline("WARNING: Previous graphics windows will be closed because of too many open windows.\nTO CONTINUE, PRESS <ENTER> IN R CONSOLE.\n")
+      graphics.off() 
+      windows( width=width*mag , height=height*mag , ... )    
+    }
   }
 }
 
@@ -233,7 +241,7 @@ DbdaDensPlot = function( codaObject , parName=varnames(codaObject)[1] , plColors
 }
 
 diagMCMC = function( codaObject , parName=varnames(codaObject)[1] ,
-                         saveName=NULL , saveType="jpg" ) {
+                     saveName=NULL , saveType="jpg" ) {
   DBDAplColors = c("skyblue","black","royalblue","steelblue")
   openGraph(height=5,width=7)
   par( mar=0.5+c(3,4,1,0) , oma=0.1+c(0,0,2,0) , mgp=c(2.25,0.7,0) , 
@@ -246,12 +254,17 @@ diagMCMC = function( codaObject , parName=varnames(codaObject)[1] ,
   tryVal = try(
     coda::gelman.plot( codaObject[,c(parName)] , main="" , auto.layout=FALSE , 
                        col=DBDAplColors )
-  )
+  )  
   # if it runs, gelman.plot returns a list with finite shrink values:
-  if ( class(tryVal) != "list"  | !is.finite(tryVal$shrink[1]) ) { 
+  if ( class(tryVal)=="try-error" ) {
     plot.new() 
-    print(paste0("Warning: gelman.plot fails for ",parName))
-  } 
+    print(paste0("Warning: coda::gelman.plot fails for ",parName))
+  } else { 
+    if ( class(tryVal)=="list" & !is.finite(tryVal$shrink[1]) ) {
+      plot.new() 
+      print(paste0("Warning: coda::gelman.plot fails for ",parName))
+    }
+  }
   DbdaAcfPlot(codaObject,parName,plColors=DBDAplColors)
   DbdaDensPlot(codaObject,parName,plColors=DBDAplColors)
   mtext( text=parName , outer=TRUE , adj=c(0.5,0.5) , cex=2.0 )
@@ -261,7 +274,7 @@ diagMCMC = function( codaObject , parName=varnames(codaObject)[1] ,
 }
 
 diagStanFit = function( stanFit , parName ,
-                     saveName=NULL , saveType="jpg" ) {
+                        saveName=NULL , saveType="jpg" ) {
   codaFit = mcmc.list( lapply( 1:ncol(stanFit) , 
                                function(x) { mcmc(as.array(stanFit)[,x,]) } ) )
   DBDAplColors = c("skyblue","black","royalblue","steelblue")
@@ -274,9 +287,19 @@ diagStanFit = function( stanFit , parName ,
   # gelman.plot are from CODA package:
   require(coda)
   tryVal = try(
-    gelman.plot(codaFit[,c(parName)],main="",auto.layout=FALSE,col=DBDAplColors)
+    coda::gelman.plot( codaObject[,c(parName)] , main="" , auto.layout=FALSE , 
+                       col=DBDAplColors )
   )
-  if ( class(tryVal)!="list" ) { plot.new() } # gelman.plot returns list
+  # if it runs, gelman.plot returns a list with finite shrink values:
+  if ( class(tryVal)=="try-error" ) {
+    plot.new() 
+    print(paste0("Warning: coda::gelman.plot fails for ",parName))
+  } else { 
+    if ( class(tryVal)=="list" & !is.finite(tryVal$shrink[1]) ) {
+      plot.new() 
+      print(paste0("Warning: coda::gelman.plot fails for ",parName))
+    }
+  }
   DbdaAcfPlot(codaFit,parName,plColors=DBDAplColors)
   DbdaDensPlot(codaFit,parName,plColors=DBDAplColors)
   mtext( text=parName , outer=TRUE , adj=c(0.5,0.5) , cex=2.0 )
@@ -427,8 +450,8 @@ plotPost = function( paramSampleVec , cenTend=c("mode","median","mean")[1] ,
            lty="dotted" , lwd=2 , col=cvCol )
     text( compVal , cvHt ,
           bquote( .(round(100*pLtCompVal,1)) * "% < " *
-                  .(signif(compVal,3)) * " < " * 
-                  .(round(100*pGtCompVal,1)) * "%" ) ,
+                   .(signif(compVal,3)) * " < " * 
+                   .(round(100*pGtCompVal,1)) * "%" ) ,
           adj=c(pLtCompVal,0) , cex=0.8*cex , col=cvCol )
     postSummary[,"compVal"] = compVal
     postSummary[,"pGtCompVal"] = pGtCompVal
@@ -436,7 +459,7 @@ plotPost = function( paramSampleVec , cenTend=c("mode","median","mean")[1] ,
   # Display the ROPE.
   if ( !is.null( ROPE ) ) {
     pInROPE = ( sum( paramSampleVec > ROPE[1] & paramSampleVec < ROPE[2] )
-                 / length( paramSampleVec ) )
+                / length( paramSampleVec ) )
     pGtROPE = ( sum( paramSampleVec >= ROPE[2] ) / length( paramSampleVec ) )
     pLtROPE = ( sum( paramSampleVec <= ROPE[1] ) / length( paramSampleVec ) )
     lines( c(ROPE[1],ROPE[1]) , c(0.96*ROPEtextHt,0) , lty="dotted" , lwd=2 ,
@@ -445,8 +468,8 @@ plotPost = function( paramSampleVec , cenTend=c("mode","median","mean")[1] ,
            col=ropeCol)
     text( mean(ROPE) , ROPEtextHt ,
           bquote( .(round(100*pLtROPE,1)) * "% < " * .(ROPE[1]) * " < " * 
-                  .(round(100*pInROPE,1)) * "% < " * .(ROPE[2]) * " < " * 
-                  .(round(100*pGtROPE,1)) * "%" ) ,
+                   .(round(100*pInROPE,1)) * "% < " * .(ROPE[2]) * " < " * 
+                   .(round(100*pGtROPE,1)) * "%" ) ,
           adj=c(pLtROPE+.5*pInROPE,0) , cex=1 , col=ropeCol )
     
     postSummary[,"ROPElow"]=ROPE[1] 

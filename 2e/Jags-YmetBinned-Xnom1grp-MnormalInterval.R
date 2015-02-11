@@ -1,7 +1,7 @@
 # Jags-YmetBinned-Xnom1grp-MnormalInterval.R 
 # Accompanies the book:
-#   Kruschke, J. K. (2014). Doing Bayesian Data Analysis: 
-#   A Tutorial with R and JAGS, 2nd Edition. Academic Press / Elsevier.
+#   Kruschke, J. K. (2014). Doing Bayesian Data Analysis, Second Edition: 
+#   A Tutorial with R, JAGS, and Stan. Academic Press / Elsevier.
 
 source("DBDA2E-utilities.R")
 
@@ -15,6 +15,7 @@ genMCMC = function( data ,  yName , yBinName , threshVecName ,
   y = data[,yName]
   ybin = data[,yBinName]
   threshMat = data[,threshVecName]
+  if ( is.null(dim(threshMat)) ) { threshMat = cbind(threshMat) }
   Ntotal = length(y)
   # Specify the data in a list, for later shipment to JAGS:
   dataList = list(
@@ -161,6 +162,7 @@ plotMCMC = function( codaSamples , data , yName , yBinName , threshVecName ,
   # Compute limits for plots of data with posterior pred. distributions
   y = data[,yName]
   threshMat = data[,threshVecName]
+  if ( is.null(dim(threshMat)) ) { threshMat = cbind(threshMat) }
   xLim = c( min(y,na.rm=TRUE)-0.1*(max(y,na.rm=TRUE)-min(y,na.rm=TRUE)) , 
             max(y,na.rm=TRUE)+0.1*(max(y,na.rm=TRUE)-min(y,na.rm=TRUE)) )
   xBreaks = seq( xLim[1] , xLim[2] , 

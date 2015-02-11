@@ -34,7 +34,7 @@ source("Jags-Ymet-XnomSplitPlot-MnormalHom.R")
 # Generate the MCMC chain:
 mcmcCoda = genMCMC( datFrm=myDataFrame , 
                     yName=yName , xBetweenName=xBetweenName , 
-                    xWithinName=xWithinName , xSubjName=xSubjectName ,
+                    xWithinName=xWithinName , xSubjectName=xSubjectName ,
                     numSavedSteps=12000 , thinSteps=20 , saveName=fileNameRoot )
 #------------------------------------------------------------------------------- 
 # Display diagnostics of chain, for specified parameters:

@@ -3,7 +3,7 @@ source("DBDA2E-utilities.R")
 
 #===============================================================================
 
-genMCMC = function( datFrm , yName , xBetweenName , xWithinName , xSubjName ,
+genMCMC = function( datFrm , yName , xBetweenName , xWithinName , xSubjectName ,
                     numSavedSteps=50000 , thinSteps=1 , saveName=NULL ) { 
   #------------------------------------------------------------------------------
   # THE DATA.

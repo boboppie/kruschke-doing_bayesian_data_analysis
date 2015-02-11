@@ -103,7 +103,7 @@ genMCMC = function( data , xName="x" , yName="y" , sName="s" , wName=NULL ,
   nuInit = 10 # arbitrary
   initsList = list(
     zsigma=sigmaInit  ,
-    nu=nuInit ,
+    nuMinusOne=nuInit ,
     zbeta0mu=b0init ,
     zbeta1mu=b1init ,
     zbeta2mu=b2init ,

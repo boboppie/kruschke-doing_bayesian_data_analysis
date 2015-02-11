@@ -343,7 +343,6 @@ plotMCMC = function( codaSamples ,
     if ( !is.null(saveName) ) {
       saveGraph( file=paste0(saveName,"PostPred-",x2levels[x2idx]), type=saveType)
     }
-    if ( length(x2levels) > 10 ) { dev.off() }
   } # end for x2idx
   
   # plot contrasts:

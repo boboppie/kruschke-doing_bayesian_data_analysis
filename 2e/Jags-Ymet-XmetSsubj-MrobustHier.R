@@ -15,7 +15,8 @@ genMCMC = function( data , xName="x" , yName="y" , sName="s" ,
   # THE DATA.
   y = data[,yName]
   x = data[,xName]
-  s = as.numeric(data[,sName])
+  # Convert sName to consecutive integers:
+  s = as.numeric(factor(data[,sName]))
   # Do some checking that data make sense:
   if ( any( !is.finite(y) ) ) { stop("All y values must be finite.") }
   if ( any( !is.finite(x) ) ) { stop("All x values must be finite.") }
@@ -242,9 +243,9 @@ plotMCMC = function( codaSamples , data , xName="x" , yName="y" , sName="s" ,
       }
       points( x[thisSrows] , y[thisSrows] , pch=19 )
     }
-  }
-  if ( !is.null(saveName) ) {
-    saveGraph( file=paste(saveName,"PostPredSubj",sep=""), type=saveType)
+    if ( !is.null(saveName) ) {
+      saveGraph( file=paste0(saveName,"PostPredSubj",plotIdx), type=saveType)
+    }
   }
   #-----------------------------------------------------------------------------
   # Data with superimposed regression lines and noise distributions:

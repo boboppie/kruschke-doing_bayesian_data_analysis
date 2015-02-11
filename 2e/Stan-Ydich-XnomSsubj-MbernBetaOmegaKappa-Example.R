@@ -20,8 +20,12 @@ fileNameRoot = "Stan-Ydich-XnomSsubj-MbernBetaOmegaKappa-"
 graphFileType = "eps" 
 #------------------------------------------------------------------------------- 
 # Generate the MCMC chain:
-mcmcCoda = genMCMC( data=myData , numSavedSteps=12000 , saveName=fileNameRoot ,
-                    thinSteps=10 )
+startTime = proc.time()
+mcmcCoda = genMCMC( data=myData , sName="s" , yName="y" ,  
+                    numSavedSteps=12000 , saveName=fileNameRoot , thinSteps=10 )
+stopTime = proc.time()
+duration = stopTime - startTime
+show(duration)
 #------------------------------------------------------------------------------- 
 # Display diagnostics of chain, for specified parameters:
 parameterNames = varnames(mcmcCoda) # get all parameter names for reference

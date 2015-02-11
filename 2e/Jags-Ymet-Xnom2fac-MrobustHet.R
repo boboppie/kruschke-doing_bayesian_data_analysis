@@ -359,7 +359,6 @@ plotMCMC = function( codaSamples ,
     if ( !is.null(saveName) ) {
       saveGraph( file=paste0(saveName,"PostPred-",x2levels[x2idx]), type=saveType)
     }
-    dev.off()
   } # end for x2idx
 
   # Display the normality and top-level variance parameters:
