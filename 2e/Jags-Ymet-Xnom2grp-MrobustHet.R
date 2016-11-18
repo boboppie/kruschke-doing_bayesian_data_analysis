@@ -1,14 +1,16 @@
 # Jags-Ymet-Xnom2grp-MrobustHet.R 
 # Accompanies the book:
-#   Kruschke, J. K. (2014). Doing Bayesian Data Analysis: 
-#   A Tutorial with R and JAGS, 2nd Edition. Academic Press / Elsevier.
+#  Kruschke, J. K. (2015). Doing Bayesian Data Analysis, Second Edition: 
+#  A Tutorial with R, JAGS, and Stan. Academic Press / Elsevier.
 
 source("DBDA2E-utilities.R")
 
 #===============================================================================
 
-genMCMC = function( datFrm, yName="y" , xName="x" , numSavedSteps=50000 , 
-                    saveName=NULL ) { 
+genMCMC = function( datFrm, yName="y" , xName="x" ,
+                    saveName=NULL , numSavedSteps=50000 , thinSteps=1 ,
+                    runjagsMethod=runjagsMethodDefault , 
+                    nChains=nChainsDefault ) { 
   #-----------------------------------------------------------------------------
   # THE DATA.
   y = as.numeric(datFrm[,yName])
@@ -38,9 +40,8 @@ genMCMC = function( datFrm, yName="y" , xName="x" , numSavedSteps=50000 ,
       mu[j] ~ dnorm( meanY , 1/(100*sdY)^2 )
       sigma[j] ~ dunif( sdY/1000 , sdY*1000 )
     }
-    nu <- nuMinusOne+1
-    nuMinusOne ~ dexp(1/29)
-  }
+    nu ~ dexp(1/30.0)
+}
   " # close quote for modelString
   # Write out modelString to a text file
   writeLines( modelString , con="TEMPmodel.txt" )
@@ -52,38 +53,12 @@ genMCMC = function( datFrm, yName="y" , xName="x" , numSavedSteps=50000 ,
   # Regarding initial values in next line: (1) sigma will tend to be too big if 
   # the data have outliers, and (2) nu starts at 5 as a moderate value. These
   # initial values keep the burn-in period moderate.
-  initsList = list( mu = mu , sigma = sigma , nuMinusOne = 4 )
+  initsList = list( mu = mu , sigma = sigma , nu = 5 )
   #-----------------------------------------------------------------------------
   # RUN THE CHAINS
   parameters = c( "mu" , "sigma" , "nu" )     # The parameters to be monitored
   adaptSteps = 500               # Number of steps to "tune" the samplers
   burnInSteps = 1000
-  thinSteps = 1
-  
-  library("parallel")
-  nCores = detectCores()
-  if ( nCores > 1 ) {
-    runjagsMethod = "parallel"
-    nChains = nCores-1
-  } else {
-    runjagsMethod = "rjags"
-    nChains = 4
-  }
-  
-#   require(rjags)
-#   nIter = ceiling( ( numSavedSteps * thinSteps ) / nChains )
-#   # Create, initialize, and adapt the model:
-#   jagsModel = jags.model( "TEMPmodel.txt" , data=dataList , inits=initsList , 
-#                           n.chains=nChains , n.adapt=adaptSteps )
-#   # Burn-in:
-#   cat( "Burning in the MCMC chain...\n" )
-#   update( jagsModel , n.iter=burnInSteps )
-#   # The saved MCMC chain:
-#   cat( "Sampling final MCMC chain...\n" )
-#   codaSamples = coda.samples( jagsModel , variable.names=parameters , 
-#                               n.iter=nIter , thin=thinSteps )
-  
-  require(runjags)
   runJagsOut <- run.jags( method=runjagsMethod ,
                           model="TEMPmodel.txt" , 
                           monitor=parameters , 

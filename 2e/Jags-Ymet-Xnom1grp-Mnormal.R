@@ -1,7 +1,7 @@
 # Jags-Ymet-Xnom1grp-Mnormal.R 
 # Accompanies the book:
-#   Kruschke, J. K. (2014). Doing Bayesian Data Analysis: 
-#   A Tutorial with R and JAGS, 2nd Edition. Academic Press / Elsevier.
+#   Kruschke, J. K. (2015). Doing Bayesian Data Analysis, Second Edition: 
+#   A Tutorial with R, JAGS, and Stan. Academic Press / Elsevier.
 
 source("DBDA2E-utilities.R")
 

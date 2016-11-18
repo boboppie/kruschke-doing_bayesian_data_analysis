@@ -1,10 +1,16 @@
 
+# Accompanies the book:
+#   Kruschke, J. K. (2015). Doing Bayesian Data Analysis, Second Edition: 
+#   A Tutorial with R, JAGS, and Stan. Academic Press / Elsevier.
+
 source("DBDA2E-utilities.R")
 
 #===============================================================================
 
 genMCMC = function( datFrm , yName , xBetweenName , xWithinName , xSubjectName ,
-                    numSavedSteps=50000 , thinSteps=1 , saveName=NULL ) { 
+                    numSavedSteps=50000 , thinSteps=1 , saveName=NULL ,
+                    runjagsMethod=runjagsMethodDefault , 
+                    nChains=nChainsDefault ) { 
   #------------------------------------------------------------------------------
   # THE DATA.
   # Convert data file columns to generic x,y variable names for model:
@@ -106,15 +112,12 @@ genMCMC = function( datFrm , yName , xBetweenName , xWithinName , xSubjectName ,
         
   }
   " # close quote for modelstring
-  writeLines(modelstring,con="model.txt")
+  writeLines(modelstring,con="TEMPmodel.txt")
   #------------------------------------------------------------------------------
   # INTIALIZE THE CHAINS.
   # Let JAGS it automatically...
-  initsList=NULL
   #------------------------------------------------------------------------------
   # RUN THE CHAINS
-  require(rjags)
-  require(runjags)
   parameters = c( # "a0" ,  "aB" ,  "aW" ,  "aBxW" , "aS" ,
     "mSxW" , "b0" ,  "bB" ,  "bW" ,  "bBxW" , "bS" , 
     "sigma" , "sigmaB" , "sigmaW" , "sigmaBxW" , "sigmaS"  )
@@ -122,16 +125,11 @@ genMCMC = function( datFrm , yName , xBetweenName , xWithinName , xSubjectName ,
   ## Using runjags:
   adaptSteps = 1000 
   burnInSteps = 2000 
-  require(parallel)
-  nCores = detectCores()
-  if ( !is.finite(nCores) ) { nCores = 1 } 
-  nChains = min( 4 , max( 1 , ( nCores - 1 ) ) )
-  
-  runJagsOut <- run.jags( method=c("rjags","parallel")[2] ,
-                          model="model.txt" , 
+  runJagsOut <- run.jags( method=runjagsMethod ,
+                          model="TEMPmodel.txt" , 
                           monitor=parameters , 
                           data=dataList ,  
-                          inits=initsList , 
+                          #inits=initsList , 
                           n.chains=nChains ,
                           adapt=adaptSteps ,
                           burnin=burnInSteps , 
@@ -139,7 +137,6 @@ genMCMC = function( datFrm , yName , xBetweenName , xWithinName , xSubjectName ,
                           thin=thinSteps ,
                           summarise=FALSE ,
                           plots=FALSE )
-  
   codaSamples = as.mcmc.list( runJagsOut )
   # resulting codaSamples object has these indices: 
   #   codaSamples[[ chainIdx ]][ stepIdx , paramIdx ]

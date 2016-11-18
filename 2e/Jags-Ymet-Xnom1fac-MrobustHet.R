@@ -1,14 +1,16 @@
-
+# Jags-Ymet-Xnom1fac-MrobustHet.R
 # Accompanies the book:
-#   Kruschke, J. K. (2014). Doing Bayesian Data Analysis: 
-#   A Tutorial with R and JAGS, 2nd Edition. Academic Press / Elsevier.
+#  Kruschke, J. K. (2015). Doing Bayesian Data Analysis, Second Edition: 
+#  A Tutorial with R, JAGS, and Stan. Academic Press / Elsevier.
 
 source("DBDA2E-utilities.R")
 
 #===============================================================================
 
 genMCMC = function( datFrm , yName="y" , xName="x" ,
-                    numSavedSteps=50000 , thinSteps=1 , saveName=NULL ) { 
+                    numSavedSteps=50000 , thinSteps=1 , saveName=NULL ,
+                    runjagsMethod=runjagsMethodDefault , 
+                    nChains=nChainsDefault ) { 
   #------------------------------------------------------------------------------
   # THE DATA.
   # Convert data file columns to generic x,y variable names for model:
@@ -49,8 +51,7 @@ genMCMC = function( datFrm , yName="y" , xName="x" ,
     for ( i in 1:Ntotal ) {
       y[i] ~ dt(  a0 + a[x[i]] , 1/ySigma[x[i]]^2 , nu )
     }
-    nu <- nuMinusOne+1
-    nuMinusOne ~  dexp(1/29) 
+    nu ~  dexp(1/30.0) 
     for ( j in 1:NxLvl ) { 
       ySigma[j] <- max( sigma[j] , medianCellSD/1000 ) # prevent zero ySigma
       sigma[j] ~ dgamma( ySigmaSh , ySigmaRa ) 
@@ -72,16 +73,10 @@ genMCMC = function( datFrm , yName="y" , xName="x" ,
     for ( j in 1:NxLvl ) { b[j] <- m[j] - b0 }
   }
   " # close quote for modelstring
-  writeLines(modelstring,con="model.txt")
+  writeLines(modelstring,con="TEMPmodel.txt")
   #------------------------------------------------------------------------------
   # INTIALIZE THE CHAINS.
-  initsList = NULL
-  #initsList = list(
-  #  a0 = yMean ,
-  #  a = aggregate( y , list( x ) , mean )[,2] - yMean ,
-  #  sigma = aggregate( y , list( x ) , sd )[,2]
-  #  # Let JAGS do other parameters automatically...
-  #)
+  # Let JAGS do it automatically...
   #------------------------------------------------------------------------------
   # RUN THE CHAINS
   # require(rjags)
@@ -90,16 +85,11 @@ genMCMC = function( datFrm , yName="y" , xName="x" ,
                   "ySigma" , "nu" , "ySigmaMode" , "ySigmaSD" )
   adaptSteps = 500 
   burnInSteps = 1000 
-  require(parallel)
-  nCores = detectCores()
-  if ( !is.finite(nCores) ) { nCores = 1 } 
-  nChains = min( 4 , max( 1 , ( nCores - 1 ) ) )
-  
-  runJagsOut <- run.jags( method=c("rjags","parallel")[2] ,
-                          model="model.txt" , 
+  runJagsOut <- run.jags( method=runjagsMethod ,
+                          model="TEMPmodel.txt" , 
                           monitor=parameters , 
                           data=dataList ,  
-                          inits=initsList , 
+                          #inits=initsList , 
                           n.chains=nChains ,
                           adapt=adaptSteps ,
                           burnin=burnInSteps , 
@@ -108,18 +98,6 @@ genMCMC = function( datFrm , yName="y" , xName="x" ,
                           summarise=FALSE ,
                           plots=FALSE )
   codaSamples = as.mcmc.list( runJagsOut )
-  
-  #   # Create, initialize, and adapt the model:
-  #   jagsModel = jags.model( "model.txt" , data=dataList , inits=initsList , 
-  #                           n.chains=nChains , n.adapt=adaptSteps )
-  #   # Burn-in:
-  #   cat( "Burning in the MCMC chain...\n" )
-  #   update( jagsModel , n.iter=burnInSteps )
-  #   # The saved MCMC chain:
-  #   cat( "Sampling final MCMC chain...\n" )
-  #   nIter = ceiling( ( numSavedSteps * thinSteps ) / nChains )
-  #   codaSamples = coda.samples( jagsModel , variable.names=parameters , 
-  #                               n.iter=nIter , thin=thinSteps )
   
   # resulting codaSamples object has these indices: 
   #   codaSamples[[ chainIdx ]][ stepIdx , paramIdx ]

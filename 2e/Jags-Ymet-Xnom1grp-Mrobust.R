@@ -1,7 +1,7 @@
 # Jags-Ymet-Xnom1grp-Mrobust.R 
 # Accompanies the book:
-#   Kruschke, J. K. (2014). Doing Bayesian Data Analysis: 
-#   A Tutorial with R and JAGS, 2nd Edition. Academic Press / Elsevier.
+#  Kruschke, J. K. (2015). Doing Bayesian Data Analysis, Second Edition: 
+#  A Tutorial with R, JAGS, and Stan. Academic Press / Elsevier.
 
 source("DBDA2E-utilities.R")
 
@@ -31,8 +31,7 @@ genMCMC = function( data , numSavedSteps=50000 , saveName=NULL ) {
   }
   mu ~ dnorm( meanY , 1/(100*sdY)^2 )
   sigma ~ dunif( sdY/1000 , sdY*1000 )
-  nu <- nuMinusOne+1
-  nuMinusOne ~ dexp(1/29)
+  nu ~ dexp(1/30.0)
   }
   " # close quote for modelString
   # Write out modelString to a text file
@@ -42,7 +41,7 @@ genMCMC = function( data , numSavedSteps=50000 , saveName=NULL ) {
   # Initial values of MCMC chains based on data:
   mu = mean(y) 
   sigma = sd(y) 
-  initsList = list( mu = mu , sigma = sigma , nuMinusOne = 4 )
+  initsList = list( mu = mu , sigma = sigma , nu = 5 )
   #-----------------------------------------------------------------------------
   # RUN THE CHAINS
   parameters = c( "mu" , "sigma" , "nu" )     # The parameters to be monitored

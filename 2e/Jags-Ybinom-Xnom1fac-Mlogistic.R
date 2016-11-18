@@ -8,7 +8,9 @@ source("DBDA2E-utilities.R")
 genMCMC = function( 
   # data=myData , zName="Hits", NName="AtBats", sName="Player", cName="PriPos",
                     datFrm , yName , NName , xName ,
-                    numSavedSteps=50000 , thinSteps=1 , saveName=NULL ) { 
+                    numSavedSteps=50000 , thinSteps=1 , saveName=NULL ,
+                    runjagsMethod=runjagsMethodDefault , 
+                    nChains=nChainsDefault ) { 
   #------------------------------------------------------------------------------
   # THE DATA.
   # Convert data file columns to generic x,y variable names for model:
@@ -52,7 +54,7 @@ genMCMC = function(
   
   #------------------------------------------------------------------------------
   # INTIALIZE THE CHAINS.
-  initsList = NULL
+  initsList = NA
   
   #------------------------------------------------------------------------------
   # RUN THE CHAINS
@@ -62,12 +64,7 @@ genMCMC = function(
   adaptSteps = 500 
   burnInSteps = 1000 
   
-  library(parallel)
-  nCores = detectCores()
-  if ( !is.finite(nCores) ) { nCores = 1 } 
-  nChains = min( 4 , max( 1 , ( nCores - 1 ) ) )
-  
-  runJagsOut <- run.jags( method=c("rjags","parallel")[2] ,
+  runJagsOut <- run.jags( method=runjagsMethod ,
                           model="model.txt" , 
                           monitor=parameters , 
                           data=dataList ,  

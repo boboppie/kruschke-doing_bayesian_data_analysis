@@ -14,64 +14,32 @@ cat(paste0(bannerBreak,bookInfo,bannerBreak,"\n"))
 
 #------------------------------------------------------------------------------
 # Check that required packages are installed:
-want = c("parallel","rjags","runjags")
+want = c("parallel","rjags","runjags","compute.es")
 have = want %in% rownames(installed.packages())
 if ( any(!have) ) { install.packages( want[!have] ) }
 
-# Load parallel package for detectCores function:
-library(parallel)
-# Set some options in runjags:
-library(runjags)
-runjags.options( inits.warning=FALSE , rng.warning=FALSE )
+# Load rjags. Assumes JAGS is already installed.
+try( library(rjags) )
+# Load runjags. Assumes JAGS is already installed.
+try( library(runjags) )
+try( runjags.options( inits.warning=FALSE , rng.warning=FALSE ) )
 
-#------------------------------------------------------------------------------
-
-# Make some data files for examples...
-createDataFiles=FALSE
-if ( createDataFiles ) {
-  
-  source("HtWtDataGenerator.R")
-  N=300
-  m = HtWtDataGenerator( N , rndsd=47405 )
-  write.csv( file=paste0("HtWtData",N,".csv") , row.names=FALSE , m )
-  
-  
-  # Function for generating normal data with normal outliers:
-  genYwithOut = function( N , pcntOut=15 , sdOut=3.0 ) {
-    inl = rnorm( N-ceiling(pcntOut/100*N) )
-    out = rnorm(   ceiling(pcntOut/100*N) )
-    inl = (inl-mean(inl))/sd(inl)
-    out = (out-mean(out))/sd(out) * sdOut
-    return(c(inl,out))
-  }
-  
-  # Two-group IQ scores with outliers 
-  set.seed(47405)
-  y1 = round(pmax(50,genYwithOut(63,20,3.5)*17.5+106))
-  y2 = round(pmax(50,genYwithOut(57,20,3.5)*10+100))
-  write.csv( file="TwoGroupIQ.csv" , row.names=FALSE ,
-             data.frame( Score=c(y1,y2) , 
-                         Group=c(rep("Smart Drug",length(y1)),
-                                 rep("Placebo",length(y2))) ) )
-  
-  # One-group log-normal
-  set.seed(47405)
-  z = rnorm(123)
-  logY = (z-mean(z))/sd(z) * 0.5 + 5.5 # logY has mean 5.5 and sd 0.5
-  y = round( exp(logY) , 2 )
-  write.csv( file="OneGroupLogNormal.csv" , row.names=FALSE ,
-             cbind(y) )
-  
-  # One-group gamma
-  desiredMode = 250
-  desiredSD = 100
-  desiredRate = (desiredMode+sqrt(desiredMode^2+4*desiredSD^2))/(2*desiredSD^2)
-  desiredShape = 1+desiredMode*desiredRate
-  set.seed(47405)
-  y = round( rgamma( 153 , shape=desiredShape , rate=desiredRate ) , 2 )
-  write.csv( file="OneGroupGamma.csv" , row.names=FALSE , cbind(y) )
-  
-} # end if createDataFiles
+# set default number of chains and parallelness for MCMC:
+library(parallel) # for detectCores().
+nCores = detectCores() 
+if ( !is.finite(nCores) ) { nCores = 1 } 
+if ( nCores > 4 ) { 
+  nChainsDefault = 4  # because JAGS has only 4 rng's.
+  runjagsMethodDefault = "parallel"
+}
+if ( nCores == 4 ) { 
+  nChainsDefault = 3  # save 1 core for other processes.
+  runjagsMethodDefault = "parallel"
+}
+if ( nCores < 4 ) { 
+  nChainsDefault = 3 
+  runjagsMethodDefault = "rjags" # NOT parallel
+}
 
 #------------------------------------------------------------------------------
 # Functions for opening and saving graphics that operate the same for 
@@ -479,7 +447,7 @@ plotPost = function( paramSampleVec , cenTend=c("mode","median","mean")[1] ,
     postSummary[,"pGtROPE"]=pGtROPE
   }
   # Display the HDI.
-  lines( HDI , c(0,0) , lwd=4 )
+  lines( HDI , c(0,0) , lwd=4 , lend=1 )
   text( mean(HDI) , 0 , bquote(.(100*credMass) * "% HDI" ) ,
         adj=c(.5,-1.7) , cex=cex )
   text( HDI[1] , 0 , bquote(.(signif(HDI[1],3))) ,
@@ -539,3 +507,49 @@ gammaShRaFromModeSD = function( mode , sd ) {
 
 #------------------------------------------------------------------------------
 
+# Make some data files for examples...
+createDataFiles=FALSE
+if ( createDataFiles ) {
+  
+  source("HtWtDataGenerator.R")
+  N=300
+  m = HtWtDataGenerator( N , rndsd=47405 )
+  write.csv( file=paste0("HtWtData",N,".csv") , row.names=FALSE , m )
+  
+  
+  # Function for generating normal data with normal outliers:
+  genYwithOut = function( N , pcntOut=15 , sdOut=3.0 ) {
+    inl = rnorm( N-ceiling(pcntOut/100*N) )
+    out = rnorm(   ceiling(pcntOut/100*N) )
+    inl = (inl-mean(inl))/sd(inl)
+    out = (out-mean(out))/sd(out) * sdOut
+    return(c(inl,out))
+  }
+  
+  # Two-group IQ scores with outliers 
+  set.seed(47405)
+  y1 = round(pmax(50,genYwithOut(63,20,3.5)*17.5+106))
+  y2 = round(pmax(50,genYwithOut(57,20,3.5)*10+100))
+  write.csv( file="TwoGroupIQ.csv" , row.names=FALSE ,
+             data.frame( Score=c(y1,y2) , 
+                         Group=c(rep("Smart Drug",length(y1)),
+                                 rep("Placebo",length(y2))) ) )
+  
+  # One-group log-normal
+  set.seed(47405)
+  z = rnorm(123)
+  logY = (z-mean(z))/sd(z) * 0.5 + 5.5 # logY has mean 5.5 and sd 0.5
+  y = round( exp(logY) , 2 )
+  write.csv( file="OneGroupLogNormal.csv" , row.names=FALSE ,
+             cbind(y) )
+  
+  # One-group gamma
+  desiredMode = 250
+  desiredSD = 100
+  desiredRate = (desiredMode+sqrt(desiredMode^2+4*desiredSD^2))/(2*desiredSD^2)
+  desiredShape = 1+desiredMode*desiredRate
+  set.seed(47405)
+  y = round( rgamma( 153 , shape=desiredShape , rate=desiredRate ) , 2 )
+  write.csv( file="OneGroupGamma.csv" , row.names=FALSE , cbind(y) )
+  
+} # end if createDataFiles

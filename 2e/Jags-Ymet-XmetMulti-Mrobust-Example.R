@@ -116,6 +116,4 @@ show(summaryInfo)
 plotMCMC( mcmcCoda , data=myData , xName=xName , yName=yName , 
           pairsPlot=TRUE , showCurve=FALSE ,
           saveName=fileNameRoot , saveType=graphFileType )
-# # For two predictors with interaction, make some additional graphs:
-# source("Jags-Ymet-XmetMulti-Mrobust-InteractionPostProcess.R") # more graphs
 #------------------------------------------------------------------------------- 

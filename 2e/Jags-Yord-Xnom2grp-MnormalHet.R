@@ -1,16 +1,16 @@
 # Jags-Yord-Xnom2grp-MnormalHet.R 
 # Accompanies the book:
-#   Kruschke, J. K. (2014). Doing Bayesian Data Analysis: 
-#   A Tutorial with R and JAGS, 2nd Edition. Academic Press / Elsevier.
+#   Kruschke, J. K. (2015). Doing Bayesian Data Analysis, Second Edition: 
+#   A Tutorial with R, JAGS, and Stan. Academic Press / Elsevier.
 
 source("DBDA2E-utilities.R")
 
 #===============================================================================
 
-genMCMC = function( datFrm, yName , xName , numSavedSteps=50000 , thinSteps = 1,
- 
-                    saveName=NULL ) { 
-  require(rjags)
+genMCMC = function( datFrm, yName , xName , 
+                    numSavedSteps=50000 , thinSteps = 1, saveName=NULL ,
+                    runjagsMethod=runjagsMethodDefault , 
+                    nChains=nChainsDefault ) { 
   #-----------------------------------------------------------------------------
   # THE DATA.
   y = as.numeric(datFrm[,yName])
@@ -69,14 +69,13 @@ genMCMC = function( datFrm, yName , xName , numSavedSteps=50000 , thinSteps = 1,
   writeLines( modelString , con="TEMPmodel.txt" )
   #-----------------------------------------------------------------------------
   # INTIALIZE THE CHAINS.
-  initsList = NULL
+  # Let JAGS do it...
   #-----------------------------------------------------------------------------
   # RUN THE CHAINS
   parameters = c( "mu" , "sigma" , "thresh" )
   adaptSteps = 500               # Number of steps to "tune" the samplers
   burnInSteps = 1000
-  nChains = min(4,max(1,detectCores()-1)) # 1 less than num cores, up to 4
-  runJagsOut <- run.jags( method=c("rjags","parallel")[2] ,
+  runJagsOut <- run.jags( method=runjagsMethod ,
                           model="TEMPmodel.txt" , 
                           monitor=parameters , 
                           data=dataList ,  

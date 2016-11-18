@@ -1,15 +1,16 @@
 # Jags-Ynom-XmetMulti-Msoftmax.R 
 # Accompanies the book:
-#   Kruschke, J. K. (2014). Doing Bayesian Data Analysis: 
-#   A Tutorial with R, JAGS, and Stan 2nd Edition. Academic Press / Elsevier.
+#   Kruschke, J. K. (2015). Doing Bayesian Data Analysis, Second Edition: 
+#   A Tutorial with R, JAGS, and Stan. Academic Press / Elsevier.
 
 source("DBDA2E-utilities.R")
 
 #===============================================================================
 
 genMCMC = function( data , xName , yName , 
-                    numSavedSteps=10000 , thinSteps=1 , saveName=NULL ) { 
-  require(runjags)
+                    numSavedSteps=10000 , thinSteps=1 , saveName=NULL ,
+                    runjagsMethod=runjagsMethodDefault , 
+                    nChains=nChainsDefault ) { 
   #-----------------------------------------------------------------------------
   # THE DATA.
   y = data[,yName]
@@ -78,9 +79,7 @@ genMCMC = function( data , xName , yName ,
                   "zbeta0" , "zbeta" )
   adaptSteps = 500  # Number of steps to "tune" the samplers
   burnInSteps = 1000
-  nChains = 3 
-  
-  runJagsOut <- run.jags( method=c("rjags","parallel")[2] ,
+  runJagsOut <- run.jags( method=runjagsMethod ,
                           model="TEMPmodel.txt" , 
                           monitor=parameters , 
                           data=dataList ,  

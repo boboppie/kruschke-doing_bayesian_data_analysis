@@ -1,12 +1,14 @@
 # Jags-Ydich-XnomSsubj-MbinomBetaOmegaKappa.R 
 # Accompanies the book:
-#   Kruschke, J. K. (2014). Doing Bayesian Data Analysis: 
-#   A Tutorial with R, JAGS, and Stan. 2nd Edition. Academic Press / Elsevier.
+#   Kruschke, J. K. (2015). Doing Bayesian Data Analysis, Second Edition: 
+#   A Tutorial with R, JAGS, and Stan. Academic Press / Elsevier.
 source("DBDA2E-utilities.R")
 #===============================================================================
 
 genMCMC = function( data , sName="s" , yName="y" ,  
-                    numSavedSteps=50000 , saveName=NULL , thinSteps=1 ) { 
+                    numSavedSteps=50000 , saveName=NULL , thinSteps=1 ,
+                    runjagsMethod=runjagsMethodDefault , 
+                    nChains=nChainsDefault ) { 
   require(rjags)
   require(runjags)
   #-----------------------------------------------------------------------------
@@ -64,11 +66,9 @@ genMCMC = function( data , sName="s" , yName="y" ,
   parameters = c( "theta","omega","kappa") # The parameters to be monitored
   adaptSteps = 500             # Number of steps to adapt the samplers
   burnInSteps = 500            # Number of steps to burn-in the chains
-  nChains = 3                  # nChains should be 2 or more for diagnostics 
-  
   useRunjags = TRUE
   if ( useRunjags ) {
-    runJagsOut <- run.jags( method=c("rjags","parallel")[2] ,
+    runJagsOut <- run.jags( method=runjagsMethod ,
                             model="TEMPmodel.txt" , 
                             monitor=parameters , 
                             data=dataList ,  

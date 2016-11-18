@@ -1,14 +1,16 @@
-
+# Jags-Ymet-Xnom2fac-MrobustHet.R
 # Accompanies the book:
-#   Kruschke, J. K. (2014). Doing Bayesian Data Analysis: 
-#   A Tutorial with R and JAGS, 2nd Edition. Academic Press / Elsevier.
+#  Kruschke, J. K. (2015). Doing Bayesian Data Analysis, Second Edition: 
+#  A Tutorial with R, JAGS, and Stan. Academic Press / Elsevier.
 
 source("DBDA2E-utilities.R")
 
 #===============================================================================
 
 genMCMC = function( datFrm , yName="y" , x1Name="x1" , x2Name="x2" ,
-                    numSavedSteps=50000 ,  thinSteps=1 , saveName=NULL ) { 
+                    numSavedSteps=50000 ,  thinSteps=1 , saveName=NULL ,
+                    runjagsMethod=runjagsMethodDefault , 
+                    nChains=nChainsDefault ) { 
   #------------------------------------------------------------------------------
   # THE DATA.
   # Convert data file columns to generic x,y variable names for model:
@@ -62,9 +64,8 @@ genMCMC = function( datFrm , yName="y" , x1Name="x1" , x2Name="x2" ,
     # For sparse data with lots of outliers, there can be multimodal small-nu
     # estimates, in which case you may want to change the prior to force a 
     # larger value of nu, such as 
-    # nuMinusOne ~ dgamma(5.83,0.0483) # mode 100, sd 50
-    nu <- nuMinusOne+1
-    nuMinusOne ~ dexp(1/29) 
+    # nu ~ dgamma(5.83,0.0483) # mode 100, sd 50
+    nu ~ dexp(1/30.0) 
     #
     for ( j1 in 1:Nx1Lvl ) { for ( j2 in 1:Nx2Lvl ) {
       sigma[j1,j2] ~ dgamma( sigmaSh , sigmaRa )
@@ -100,33 +101,22 @@ genMCMC = function( datFrm , yName="y" , x1Name="x1" , x2Name="x2" ,
     } }
   }
   " # close quote for modelstring
-  writeLines(modelstring,con="model.txt")
+  writeLines(modelstring,con="TEMPmodel.txt")
   #------------------------------------------------------------------------------
   # INTIALIZE THE CHAINS.
-  # # For initializing cell SDs:
-  # cellSDmat = matrix( medianCellSD , nrow=Nx1Lvl , ncol=Nx2Lvl )
-  initsList = NULL # Let JAGS it automatically...
+  # Let JAGS it automatically...
   #------------------------------------------------------------------------------
   # RUN THE CHAINS
   parameters = c( "b0" ,  "b1" ,  "b2" ,  "b1b2" , "m" , 
                   "a1SD" , "a2SD" , "a1a2SD" ,
                   "ySigma" , "sigmaMode" , "sigmaSD" , "nu" )
-  require(rjags)
-  require(runjags)
-  
-  ## Using runjags:
   adaptSteps = 1000 
   burnInSteps = 2000 
-  require(parallel)
-  nCores = detectCores()
-  if ( !is.finite(nCores) ) { nCores = 1 } 
-  nChains = min( 4 , max( 1 , ( nCores - 1 ) ) )
-  
-  runJagsOut <- run.jags( method=c("rjags","parallel")[2] ,
-                          model="model.txt" , 
+  runJagsOut <- run.jags( method=runjagsMethod ,
+                          model="TEMPmodel.txt" , 
                           monitor=parameters , 
                           data=dataList ,  
-                          inits=initsList , 
+                          #inits=initsList , 
                           n.chains=nChains ,
                           adapt=adaptSteps ,
                           burnin=burnInSteps , 

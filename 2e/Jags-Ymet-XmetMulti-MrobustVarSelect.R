@@ -1,15 +1,17 @@
 # Jags-Ymet-XmetMulti-MrobustVarSelect.R 
 # Accompanies the book:
-#   Kruschke, J. K. (2014). Doing Bayesian Data Analysis: 
-#   A Tutorial with R, JAGS, and Stan 2nd Edition. Academic Press / Elsevier.
+#  Kruschke, J. K. (2015). Doing Bayesian Data Analysis, Second Edition: 
+#  A Tutorial with R, JAGS, and Stan. Academic Press / Elsevier.
 
 source("DBDA2E-utilities.R")
 
 #===============================================================================
 
 genMCMC = function( data , xName="x" , yName="y" , 
-                    numSavedSteps=10000 , thinSteps=1 , saveName=NULL ) { 
-  require(runjags)
+                    numSavedSteps=10000 , thinSteps=1 , saveName=NULL ,
+                    runjagsMethod=runjagsMethodDefault , 
+                    nChains=nChainsDefault ) { 
+
   #-----------------------------------------------------------------------------
   # THE DATA.
   y = data[,yName]
@@ -57,15 +59,16 @@ genMCMC = function( data , xName="x" , yName="y" ,
     for ( j in 1:Nx ) {
       zbeta[j] ~ dt( 0 , 1/sigmaBeta^2 , 1 ) 
       delta[j] ~ dbern( 0.5 )
+      #delta[j] ~ dbern( theta ) # estimate prior inclusion probability
     }
+    # theta ~ dbeta(1,1) # estimate prior inclusion probability
     zsigma ~ dunif( 1.0E-5 , 1.0E+1 )
     ## Uncomment one of the following specifications for sigmaBeta:
     # sigmaBeta <- 2.0
     # sigmaBeta ~ dunif( 1.0E-5 , 1.0E+2 )
     sigmaBeta ~ dgamma(1.1051,0.1051) # mode 1.0, sd 10.0
     # sigmaBeta <- 1/sqrt(tauBeta) ; tauBeta ~ dgamma(0.001,0.001) 
-    nu <- nuMinusOne+1
-    nuMinusOne ~ dexp(1/29.0)
+    nu ~ dexp(1/30.0)
     # Transform to original scale:
     beta[1:Nx] <- ( delta[1:Nx] * zbeta[1:Nx] / xsd[1:Nx] )*ysd
     beta0 <- zbeta0*ysd  + ym - sum( delta[1:Nx] * zbeta[1:Nx] * xm[1:Nx] 
@@ -78,26 +81,16 @@ genMCMC = function( data , xName="x" , yName="y" ,
   #-----------------------------------------------------------------------------
   # INTIALIZE THE CHAINS.
   # Let JAGS do it...
-  
-  # Must standardize data first...
-  #   lmInfo = lm( zy ~ zx )
-  #   initsList = list(
-  #     beta0 = lmInfo$coef[1] ,   
-  #     beta = lmInfo$coef[-1] ,        
-  #     sigma = sqrt(mean(lmInfo$resid^2)) ,
-  #     nuMinusOne = 10
-  #   )
-  
-  
+    
   #-----------------------------------------------------------------------------
   # RUN THE CHAINS
   parameters = c( "beta0" ,  "beta" ,  "sigma", "delta" , "sigmaBeta" ,
-                  "zbeta0" , "zbeta" , "zsigma", "nu" )
+                  "zbeta0" , "zbeta" , "zsigma", "nu"  
+                  # , theta # estimate prior inclusion probability
+                  )
   adaptSteps = 500  # Number of steps to "tune" the samplers
   burnInSteps = 1000
-  nChains = 3 
-  
-  runJagsOut <- run.jags( method=c("rjags","parallel")[2] ,
+  runJagsOut <- run.jags( method=runjagsMethod ,
                           model="TEMPmodel.txt" , 
                           monitor=parameters , 
                           data=dataList ,  
@@ -156,18 +149,18 @@ plotMCMC = function( codaSamples , data , xName="x" , yName="y" ,
   zsigma = mcmcMat[,"zsigma"]
   beta0 = mcmcMat[,"beta0"]
   beta  = mcmcMat[,grep("^beta\\[",colnames(mcmcMat))]
+  delta  = mcmcMat[,grep("^delta\\[",colnames(mcmcMat))]
   sigma = mcmcMat[,"sigma"]
   nu = mcmcMat[,"nu"]
   log10nu = log10(nu)
   #-----------------------------------------------------------------------------
   # Compute R^2 for credible parameters:
   YcorX = cor( y , x ) # correlation of y with each x predictor
-  Rsq = zbeta %*% matrix( YcorX , ncol=1 )
+  Rsq = (delta * zbeta) %*% matrix( YcorX , ncol=1 )
   #-----------------------------------------------------------------------------
   # Show results for each subset of predictors:
   # This is inelegant code, intended only for a basic illustration.
   # Recall that delta[j] is inclusion coefficient for predictor j.
-  mcmcMat = as.matrix(mcmcCoda,chains=TRUE)
   parameterNames = colnames(mcmcMat)
   deltaCol = grep("delta\\[",parameterNames)
   Npred = length(deltaCol)
@@ -193,7 +186,7 @@ plotMCMC = function( codaSamples , data , xName="x" , yName="y" ,
     if ( sum(includeSteps)>50 ) { # make graph if enough steps
       includeMat = mcmcMat[includeSteps,]
       modelProb = nrow(includeMat)/nrow(mcmcMat)
-      Ncol = min(Npred+1,5)
+      Ncol = min(Npred+2,6)
       Nrow = 1+(Npred)%/%Ncol
       openGraph(width=Ncol*2.25,height=Nrow*2.0)
       layout( matrix( 1:(Ncol*Nrow) , ncol=Ncol , nrow=Nrow , byrow=TRUE ) )
@@ -208,9 +201,14 @@ plotMCMC = function( codaSamples , data , xName="x" , yName="y" ,
           plotPost( includeMat[,parName] , cenTend="median" , border="skyblue" , 
                     xlab=parName , xlim=xLim , main=xName[j] )
         } else { 
-          plot.new() 
+          plot( x=-99,y=-99,xlab="",ylab="",xlim=c(-1,1),ylim=c(-1,1),
+                bty="n",axes=FALSE)
+          text( 0,0,adj=c(0.5,0.5),labels=bquote(delta[.(j)]==0), cex=1.5)
         }
       }
+      plotPost( Rsq[includeSteps] , xlab=bquote(R^2) , 
+                main="Prop Var Accntd" , 
+                cenTend="median" , border="skyblue" )
       saveGraph( file=paste0(saveName,paste0(includePred,collapse="")) , 
                  type=saveType )
     }

@@ -1,14 +1,16 @@
 # Jags-Ymet-XmetMulti-Mrobust.R 
 # Accompanies the book:
-#   Kruschke, J. K. (2014). Doing Bayesian Data Analysis: 
-#   A Tutorial with R, JAGS, and Stan 2nd Edition. Academic Press / Elsevier.
+#  Kruschke, J. K. (2015). Doing Bayesian Data Analysis, Second Edition: 
+#  A Tutorial with R, JAGS, and Stan. Academic Press / Elsevier.
 
 source("DBDA2E-utilities.R")
 
 #===============================================================================
 
 genMCMC = function( data , xName="x" , yName="y" , 
-                    numSavedSteps=10000 , thinSteps=1 , saveName=NULL ) { 
+                    numSavedSteps=10000 , thinSteps=1 , saveName=NULL  ,
+                    runjagsMethod=runjagsMethodDefault , 
+                    nChains=nChainsDefault ) { 
   require(runjags)
   #-----------------------------------------------------------------------------
   # THE DATA.
@@ -57,8 +59,7 @@ genMCMC = function( data , xName="x" , yName="y" ,
       zbeta[j] ~ dnorm( 0 , 1/2^2 )
     }
     zsigma ~ dunif( 1.0E-5 , 1.0E+1 )
-    nu <- nuMinusOne+1
-    nuMinusOne ~ dexp(1/29.0)
+    nu ~ dexp(1/30.0)
     # Transform to original scale:
     beta[1:Nx] <- ( zbeta[1:Nx] / xsd[1:Nx] )*ysd
     beta0 <- zbeta0*ysd  + ym - sum( zbeta[1:Nx] * xm[1:Nx] / xsd[1:Nx] )*ysd
@@ -77,7 +78,7 @@ genMCMC = function( data , xName="x" , yName="y" ,
   #     beta0 = lmInfo$coef[1] ,   
   #     beta = lmInfo$coef[-1] ,        
   #     sigma = sqrt(mean(lmInfo$resid^2)) ,
-  #     nuMinusOne = 10
+  #     nu = 5
   #   )
   
   
@@ -87,9 +88,7 @@ genMCMC = function( data , xName="x" , yName="y" ,
                   "zbeta0" , "zbeta" , "zsigma", "nu" )
   adaptSteps = 500  # Number of steps to "tune" the samplers
   burnInSteps = 1000
-  nChains = 3 
-  
-  runJagsOut <- run.jags( method=c("rjags","parallel")[2] ,
+  runJagsOut <- run.jags( method=runjagsMethod ,
                           model="TEMPmodel.txt" , 
                           monitor=parameters , 
                           data=dataList ,  

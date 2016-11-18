@@ -10,11 +10,13 @@ myData = read.csv( file="Guber1999data.csv" )
 # UNCOMMENT ONE OF THE FOLLOWING SECTIONS (In RStudio, select and ctrl-shift-C)
 #.............................................................................
 # Two predictors:
-yName = "SATT" ; xName = c("Spend","PrcntTake")
-fileNameRoot = "Guber1999data-Jags-VarSelect-" 
-numSavedSteps=15000 ; thinSteps=25
+# myData = read.csv( file="Guber1999data.csv" )
+# yName = "SATT" ; xName = c("Spend","PrcntTake")
+# fileNameRoot = "Guber1999data-Jags-VarSelect-" 
+# numSavedSteps=15000 ; thinSteps=25
 #.............................................................................
 # # Two predictors with redundant predictor:
+# myData = read.csv( file="Guber1999data.csv" )
 # PropNotTake = (100-myData[,"PrcntTake"])/100
 # myData = cbind( myData , PropNotTake )
 # yName = "SATT" ; xName = c("Spend","PrcntTake","PropNotTake")
@@ -22,6 +24,7 @@ numSavedSteps=15000 ; thinSteps=25
 # numSavedSteps=15000 ; thinSteps=30
 #.............................................................................
 # # Two predictors with two redundant predictors:
+# myData = read.csv( file="Guber1999data.csv" )
 # PropNotTake = (100-myData[,"PrcntTake"])/100
 # Partic = myData[,"PrcntTake"]/10 
 # myData = cbind( myData , PropNotTake , Partic )
@@ -30,11 +33,18 @@ numSavedSteps=15000 ; thinSteps=25
 # numSavedSteps=15000 ; thinSteps=15
 #.............................................................................
 # # Four predictors:
-# yName = "SATT" ; xName = c("Spend","PrcntTake","StuTeaRat","Salary")
-# fileNameRoot = "Guber1999data-Jags-4X-VarSelect-" 
-# numSavedSteps=15000 ; thinSteps=20 
+myData = read.csv( file="Guber1999data.csv" )
+yName = "SATT" ; xName = c("Spend","PrcntTake","StuTeaRat","Salary")
+# Specify name of folder (i.e., directory) in which to save output files:
+dirName="Guber1999data-Jags-4X-VarSelect"
+# Create the folder:
+if(!dir.exists(dirName)){dir.create(dirName)}
+# Specify prefix (i.e., filename root) for names of saved output files:
+fileNameRoot = paste0(dirName,"/Guber1999data-Jags-4X-VarSelect-")
+numSavedSteps=15000 ; thinSteps=20
 #.............................................................................
 # # Append columns of random predictors:
+# myData = read.csv( file="Guber1999data.csv" )
 # standardize = function(v){(v-mean(v))/sd(v)}
 # Ny=nrow(myData)
 # NxRand = 12
@@ -49,13 +59,14 @@ numSavedSteps=15000 ; thinSteps=25
 # numSavedSteps=15000 ; thinSteps=5
 #.............................................................................
 # # Two predictors with interaction.
+# myData = read.csv( file="Guber1999data.csv" )
 # # Append named column with interaction product:
 # myData = cbind( myData , SpendXPrcnt=myData[,"Spend"]*myData[,"PrcntTake"] )
 # yName = "SATT" ; xName = c("Spend","PrcntTake","SpendXPrcnt")
 # fileNameRoot = "Guber1999data-Jags-Inter-VarSelect-" 
 # numSavedSteps=15000 ; thinSteps=25
 #.............................................................................
-graphFileType = "eps" 
+graphFileType = "png" 
 #------------------------------------------------------------------------------- 
 # Load the relevant model into R's working memory:
 source("Jags-Ymet-XmetMulti-MrobustVarSelect.R")

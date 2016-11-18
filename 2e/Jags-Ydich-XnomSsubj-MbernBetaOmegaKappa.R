@@ -33,13 +33,15 @@ genMCMC = function( data , sName="s" , yName="y" ,
     for ( i in 1:Ntotal ) {
       y[i] ~ dbern( theta[s[i]] )
     }
-    for ( s in 1:Nsubj ) {
-      theta[s] ~ dbeta( omega*(kappa-2)+1 , (1-omega)*(kappa-2)+1 ) 
+    for ( sIdx in 1:Nsubj ) {
+      theta[sIdx] ~ dbeta( omega*(kappa-2)+1 , (1-omega)*(kappa-2)+1 ) 
     }
-    omega ~ dbeta( 1 , 1 )
+    omega ~ dbeta( 1 , 1 ) # broad uniform
+    # omega ~ dbeta( 5001 , 15001 ) # Skeptical prior for ESP
     kappa <- kappaMinusTwo + 2
-    kappaMinusTwo ~ dgamma( 0.01 , 0.01 )  # mean=1 , sd=10 (generic vague)
-    #kappaMinusTwo ~ dgamma( 1.105125 , 0.1051249 )  # mode=1 , sd=10 
+    # kappaMinusTwo ~ dgamma( 0.01 , 0.01 )  # mean=1 , sd=10 (generic vague)
+    kappaMinusTwo ~ dgamma( 1.105125 , 0.1051249 )  # mode=1 , sd=10 
+    # kappaMinusTwo ~ dgamma( 36 , 0.12 )  # mode=300 , sd=50 : skeptical 
   }
   " # close quote for modelString
   writeLines( modelString , con="TEMPmodel.txt" )

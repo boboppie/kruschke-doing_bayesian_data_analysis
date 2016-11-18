@@ -73,7 +73,8 @@ source("Jags-Ymet-Xnom2fac-MnormalHom.R")
 # Generate the MCMC chain:
 mcmcCoda = genMCMC( datFrm=myDataFrame , 
                     yName=yName , x1Name=x1Name , x2Name=x2Name ,
-                    numSavedSteps=15000 , thinSteps=5 , saveName=fileNameRoot )
+                    numSavedSteps=15000 , thinSteps=5 , 
+                    saveName=fileNameRoot )
 #------------------------------------------------------------------------------- 
 # Display diagnostics of chain, for specified parameters:
 parameterNames = varnames(mcmcCoda) 

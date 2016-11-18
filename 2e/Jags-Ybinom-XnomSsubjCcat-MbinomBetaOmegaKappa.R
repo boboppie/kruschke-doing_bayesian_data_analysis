@@ -6,7 +6,9 @@ source("DBDA2E-utilities.R")
 #===============================================================================
 
 genMCMC = function( data , zName="z" , NName="N" , sName="s" , cName="c" ,
-                    numSavedSteps=50000 , saveName=NULL , thinSteps=1 ) { 
+                    numSavedSteps=50000 , saveName=NULL , thinSteps=1 ,
+                    runjagsMethod=runjagsMethodDefault , 
+                    nChains=nChainsDefault ) { 
   require(rjags)
   require(runjags)
   #-----------------------------------------------------------------------------
@@ -35,16 +37,16 @@ genMCMC = function( data , zName="z" , NName="N" , sName="s" , cName="c" ,
   # THE MODEL.
   modelString = "
   model {
-    for ( s in 1:Nsubj ) {
-      z[s] ~ dbin( theta[s] , N[s] )
-      theta[s] ~ dbeta( omega[c[s]]*(kappa[c[s]]-2)+1 , 
-                        (1-omega[c[s]])*(kappa[c[s]]-2)+1 ) 
+    for ( sIdx in 1:Nsubj ) {
+      z[sIdx] ~ dbin( theta[sIdx] , N[sIdx] )
+      theta[sIdx] ~ dbeta( omega[c[sIdx]]*(kappa[c[sIdx]]-2)+1 , 
+                           (1-omega[c[sIdx]])*(kappa[c[sIdx]]-2)+1 ) 
     }
-    for ( c in 1:Ncat ) {
-      omega[c] ~ dbeta( omegaO*(kappaO-2)+1 , 
-                        (1-omegaO)*(kappaO-2)+1 )
-      kappa[c] <- kappaMinusTwo[c] + 2
-      kappaMinusTwo[c] ~ dgamma( 0.01 , 0.01 ) # mean=1 , sd=10 (generic vague)
+    for ( cIdx in 1:Ncat ) {
+      omega[cIdx] ~ dbeta( omegaO*(kappaO-2)+1 , 
+                           (1-omegaO)*(kappaO-2)+1 )
+      kappa[cIdx] <- kappaMinusTwo[cIdx] + 2
+      kappaMinusTwo[cIdx] ~ dgamma( 0.01 , 0.01 ) # mean=1 , sd=10 (generic vague)
     }
     omegaO ~ dbeta( 1.0 , 1.0 ) 
     #omegaO ~ dbeta( 1.025 , 1.075 ) # mode=0.25 , concentration=2.1
@@ -78,11 +80,10 @@ genMCMC = function( data , zName="z" , NName="N" , sName="s" , cName="c" ,
   parameters = c( "theta","omega","kappa","omegaO","kappaO") 
   adaptSteps = 500             # Number of steps to adapt the samplers
   burnInSteps = 500            # Number of steps to burn-in the chains
-  nChains = 3                  # nChains should be 2 or more for diagnostics 
   
   useRunjags = TRUE
   if ( useRunjags ) {
-    runJagsOut <- run.jags( method=c("rjags","parallel")[2] ,
+    runJagsOut <- run.jags( method=runjagsMethod ,
                             model="TEMPmodel.txt" , 
                             monitor=parameters , 
                             data=dataList ,  
@@ -108,20 +109,6 @@ genMCMC = function( data , zName="z" , NName="N" , sName="s" , cName="c" ,
                                 n.iter=ceiling(numSavedSteps*thinSteps/nChains), 
                                 thin=thinSteps )
   }  
-  
-#   nChains = 4                  # nChains should be 2 or more for diagnostics 
-#   nIter = ceiling( ( numSavedSteps * thinSteps ) / nChains )
-#   # Create, initialize, and adapt the model:
-#   jagsModel = jags.model( "TEMPmodel.txt" , data=dataList , inits=initsList , 
-#                           n.chains=nChains , n.adapt=adaptSteps )
-#   # Burn-in:
-#   cat( "Burning in the MCMC chain...\n" )
-#   update( jagsModel , n.iter=burnInSteps )
-#   # The saved MCMC chain:
-#   cat( "Sampling final MCMC chain...\n" )
-#   codaSamples = coda.samples( jagsModel , variable.names=parameters , 
-#                               n.iter=nIter , thin=thinSteps )
-
   
   # resulting codaSamples object has these indices: 
   #   codaSamples[[ chainIdx ]][ stepIdx , paramIdx ]

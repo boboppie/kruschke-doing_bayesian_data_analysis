@@ -1,14 +1,16 @@
 
 # Accompanies the book:
-#   Kruschke, J. K. (2014). Doing Bayesian Data Analysis: 
-#   A Tutorial with R and JAGS, 2nd Edition. Academic Press / Elsevier.
+#   Kruschke, J. K. (2015). Doing Bayesian Data Analysis, Second Edition: 
+#   A Tutorial with R, JAGS, and Stan. Academic Press / Elsevier.
 
 source("DBDA2E-utilities.R")
 
 #===============================================================================
 
 genMCMC = function( datFrm , yName="y" , x1Name="x1" , x2Name="x2" ,
-                    numSavedSteps=50000 , thinSteps=1 , saveName=NULL ) { 
+                    numSavedSteps=50000 , thinSteps=1 , saveName=NULL ,
+                    runjagsMethod=runjagsMethodDefault , 
+                    nChains=nChainsDefault ) { 
   #------------------------------------------------------------------------------
   # THE DATA.
   # Convert data file columns to generic x,y variable names for model:
@@ -73,48 +75,23 @@ genMCMC = function( datFrm , yName="y" , x1Name="x1" , x2Name="x2" ,
     } }
   }
   " # close quote for modelstring
-  writeLines(modelstring,con="model.txt")
+  writeLines(modelstring,con="TEMPmodel.txt")
   #------------------------------------------------------------------------------
   # INTIALIZE THE CHAINS.
   # Let JAGS it automatically...
-  initsList=NULL
   #------------------------------------------------------------------------------
   # RUN THE CHAINS
   require(rjags)
   require(runjags)
   parameters = c( "b0" ,  "b1" ,  "b2" ,  "b1b2" , "m" , "ySigma" , 
                   "a1SD" , "a2SD" , "a1a2SD" )
-  
-  ## Using rjags:
-  #   adaptSteps = 1000 
-  #   burnInSteps = 2000 
-  #   nChains = 3 
-  #   #numSavedSteps=50000 
-  #   nIter = ceiling( ( numSavedSteps * thinSteps ) / nChains )
-  #   # Create, initialize, and adapt the model:
-  #   jagsModel = jags.model( "model.txt" , data=dataList , inits=initsList , 
-  #                           n.chains=nChains , n.adapt=adaptSteps )
-  #   # Burn-in:
-  #   cat( "Burning in the MCMC chain...\n" )
-  #   update( jagsModel , n.iter=burnInSteps )
-  #   # The saved MCMC chain:
-  #   cat( "Sampling final MCMC chain...\n" )
-  #   codaSamples = coda.samples( jagsModel , variable.names=parameters , 
-  #                              n.iter=nIter , thin=thinSteps )
-  
-  ## Using runjags:
   adaptSteps = 1000 
   burnInSteps = 2000 
-  require(parallel)
-  nCores = detectCores()
-  if ( !is.finite(nCores) ) { nCores = 1 } 
-  nChains = min( 4 , max( 1 , ( nCores - 1 ) ) )
-  
-  runJagsOut <- run.jags( method=c("rjags","parallel")[2] ,
-                          model="model.txt" , 
+  runJagsOut <- run.jags( method=runjagsMethod ,
+                          model="TEMPmodel.txt" , 
                           monitor=parameters , 
                           data=dataList ,  
-                          inits=initsList , 
+                          #inits=initsList , 
                           n.chains=nChains ,
                           adapt=adaptSteps ,
                           burnin=burnInSteps , 

@@ -1,16 +1,17 @@
 # Jags-Ymet-XmetSsubj-MrobustHierQuadWt.R 
 # Accompanies the book:
-#   Kruschke, J. K. (2014). Doing Bayesian Data Analysis: 
-#   A Tutorial with R, JAGS, and Stan 2nd Edition. Academic Press / Elsevier.
+#  Kruschke, J. K. (2015). Doing Bayesian Data Analysis, Second Edition: 
+#  A Tutorial with R, JAGS, and Stan. Academic Press / Elsevier.
 
 source("DBDA2E-utilities.R")
 
 #===============================================================================
 
 genMCMC = function( data , xName="x" , yName="y" , sName="s" , wName=NULL ,
-                    numSavedSteps=10000 , thinSteps = 1 , saveName=NULL ) { 
-  require(rjags)
-  require(runjags)
+                    numSavedSteps=10000 , thinSteps = 1 , saveName=NULL ,
+                    runjagsMethod=runjagsMethodDefault , 
+                    nChains=nChainsDefault ) { 
+
   #-----------------------------------------------------------------------------
   # THE DATA.
   y = data[,yName]
@@ -69,8 +70,7 @@ genMCMC = function( data , xName="x" , yName="y" , sName="s" , wName=NULL ,
     zbeta0sigma ~ dunif( 1.0E-3 , 1.0E+3 )
     zbeta1sigma ~ dunif( 1.0E-3 , 1.0E+3 )
     zbeta2sigma ~ dunif( 1.0E-3 , 1.0E+3 )
-    nu <- nuMinusOne+1
-    nuMinusOne ~ dexp(1/29.0)
+    nu ~ dexp(1/30.0)
     # Transform to original scale:
     for ( j in 1:Nsubj ) {
       beta2[j] <- zbeta2[j]*ysd/xsd^2
@@ -103,7 +103,7 @@ genMCMC = function( data , xName="x" , yName="y" , sName="s" , wName=NULL ,
   nuInit = 10 # arbitrary
   initsList = list(
     zsigma=sigmaInit  ,
-    nuMinusOne=nuInit ,
+    nu=nuInit ,
     zbeta0mu=b0init ,
     zbeta1mu=b1init ,
     zbeta2mu=b2init ,
@@ -122,9 +122,7 @@ genMCMC = function( data , xName="x" , yName="y" , sName="s" , wName=NULL ,
                   "zsigma", "zbeta0sigma" , "zbeta1sigma", "zbeta2sigma" )
   adaptSteps = 1000  # Number of steps to "tune" the samplers
   burnInSteps = 10000 
-  nChains = 3 
-
-  runJagsOut <- run.jags( method=c("rjags","parallel")[2] ,
+  runJagsOut <- run.jags( method=runjagsMethod ,
                           model="TEMPmodel.txt" , 
                           monitor=parameters , 
                           data=dataList ,  

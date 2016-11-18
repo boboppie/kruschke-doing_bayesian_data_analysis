@@ -1,14 +1,16 @@
 # Jags-Ydic-XmetMulti-Mlogistic.R 
 # Accompanies the book:
-#   Kruschke, J. K. (2014). Doing Bayesian Data Analysis: 
-#   A Tutorial with R, JAGS, and Stan 2nd Edition. Academic Press / Elsevier.
+#   Kruschke, J. K. (2015). Doing Bayesian Data Analysis, Second Edition: 
+#   A Tutorial with R, JAGS, and Stan. Academic Press / Elsevier.
 
 source("DBDA2E-utilities.R")
 
 #===============================================================================
 
 genMCMC = function( data , xName="x" , yName="y" , 
-                    numSavedSteps=10000 , thinSteps=1 , saveName=NULL ) { 
+                    numSavedSteps=10000 , thinSteps=1 , saveName=NULL ,
+                    runjagsMethod=runjagsMethodDefault , 
+                    nChains=nChainsDefault ) { 
   require(runjags)
   #-----------------------------------------------------------------------------
   # THE DATA.
@@ -72,9 +74,7 @@ genMCMC = function( data , xName="x" , yName="y" ,
                   "zbeta0" , "zbeta" , "guess" )
   adaptSteps = 500  # Number of steps to "tune" the samplers
   burnInSteps = 1000
-  nChains = 3 
-  
-  runJagsOut <- run.jags( method=c("rjags","parallel")[2] ,
+  runJagsOut <- run.jags( method=runjagsMethod ,
                           model="TEMPmodel.txt" , 
                           monitor=parameters , 
                           data=dataList ,  

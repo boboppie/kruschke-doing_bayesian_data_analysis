@@ -1,13 +1,15 @@
 
 # Accompanies the book:
-#   Kruschke, J. K. (2014). Doing Bayesian Data Analysis: 
-#   A Tutorial with R and JAGS, 2nd Edition. Academic Press / Elsevier.
+#   Kruschke, J. K. (2015). Doing Bayesian Data Analysis, Second Edition: 
+#   A Tutorial with R, JAGS, and Stan. Academic Press / Elsevier.
 
 source("DBDA2E-utilities.R")
 
 #===============================================================================
 genMCMC = function( datFrm , yName="y" , xNomName="xNom" , xMetName="xMet" ,
-                    numSavedSteps=50000 , thinSteps=1 , saveName=NULL ) { 
+                    numSavedSteps=50000 , thinSteps=1 , saveName=NULL ,
+                    runjagsMethod=runjagsMethodDefault , 
+                    nChains=nChainsDefault ) { 
   #------------------------------------------------------------------------------
   # THE DATA.
   # Convert data file columns to generic xNom,y variable names for model:
@@ -56,7 +58,7 @@ genMCMC = function( datFrm , yName="y" , xNomName="xNom" , xMetName="xMet" ,
     for ( j in 1:NxNomLvl ) { b[j] <- a[j] - mean( a[1:NxNomLvl] ) }
   }
   " # close quote for modelstring
-  writeLines(modelstring,con="model.txt")
+  writeLines(modelstring,con="TEMPmodel.txt")
   #------------------------------------------------------------------------------
   # INTIALIZE THE CHAINS.
   initsList = list(
@@ -81,14 +83,11 @@ genMCMC = function( datFrm , yName="y" , xNomName="xNom" , xMetName="xMet" ,
   #------------------------------------------------------------------------------
   # RUN THE CHAINS
   
-  require(runjags)
   parameters = c( "b0" ,  "b" , "aMet" , "aSigma" , "ySigma" )
   adaptSteps = 500 
   burnInSteps = 1000 
-  nChains = 3 
-  
-  runJagsOut <- run.jags( method=c("rjags","parallel")[2] ,
-                          model="model.txt" , 
+  runJagsOut <- run.jags( method=runjagsMethod ,
+                          model="TEMPmodel.txt" , 
                           monitor=parameters , 
                           data=dataList ,  
                           inits=initsList , 
@@ -103,7 +102,7 @@ genMCMC = function( datFrm , yName="y" , xNomName="xNom" , xMetName="xMet" ,
   
 #   nIter = ceiling( ( numSavedSteps * thinSteps ) / nChains )
 #   # Create, initialize, and adapt the model:
-#   jagsModel = jags.model( "model.txt" , data=dataList , inits=initsList , 
+#   jagsModel = jags.model( "TEMPmodel.txt" , data=dataList , inits=initsList , 
 #                           n.chains=nChains , n.adapt=adaptSteps )
 #   # Burn-in:
 #   cat( "Burning in the MCMC chain...\n" )

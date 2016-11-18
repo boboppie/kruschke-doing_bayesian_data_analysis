@@ -32,8 +32,8 @@ genMCMC = function( data , numSavedSteps=50000 , saveName=NULL ) {
     for ( i in 1:Ntotal ) {
       y[i] ~ dbern( theta[s[i]] )
     }
-    for ( s in 1:Nsubj ) {
-      theta[s] ~ dbeta( 2 , 2 ) # N.B.: 2,2 prior; change as appropriate.
+    for ( sIdx in 1:Nsubj ) {
+      theta[sIdx] ~ dbeta( 2 , 2 ) # N.B.: 2,2 prior; change as appropriate.
     }
   }
   " # close quote for modelString

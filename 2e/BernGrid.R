@@ -1,7 +1,8 @@
 BernGrid = function( Theta , pTheta , Data , plotType=c("Points","Bars")[2] ,
                      showCentTend=c("Mean","Mode","None")[3] ,
                      showHDI=c(TRUE,FALSE)[2] , HDImass=0.95 ,
-                     showpD=c(TRUE,FALSE)[2] , nToPlot=length(Theta) ) {
+                     showpD=c(TRUE,FALSE)[2] , 
+                     nToPlot=min(2001,length(Theta)) ) {
   # Theta is vector of values between 0 and 1.
   # pTheta is prior probability mass at each value of Theta
   # Data is vector of 0's and 1's.
@@ -44,7 +45,7 @@ BernGrid = function( Theta , pTheta , Data , plotType=c("Points","Bars")[2] ,
   # thinned out subset of the teeth.
   nteeth = length(Theta)
   if ( nteeth > nToPlot ) {
-    thinIdx = round( seq( 1, nteeth , length=nteeth ) )
+    thinIdx = round( seq( 1, nteeth , length=nToPlot ) )
   } else { 
     thinIdx = 1:nteeth 
   }
